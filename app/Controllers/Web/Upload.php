@@ -21,7 +21,7 @@ class Upload extends ResourceController
             $originalName = $img->getName();
             if (!$img->hasMoved() && $originalName != 'default.jpg') {
                 $file = $img->getRandomName();
-                $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder);
+                $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder, 0777, true);
                 if ($createdFolder) {
                     $filepath = WRITEPATH . 'uploads/' . $img->store($folder, $file);
                     return $this->response->setHeader('Content-Type', 'text/plain')->setStatusCode(200)->setBody($folder);
@@ -61,7 +61,7 @@ class Upload extends ResourceController
             foreach ($files as $img) {
                 if (!$img->hasMoved()) {
                     $file = $img->getRandomName();
-                    $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder);
+                    $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder, 0777, true);
                     if ($createdFolder) {
                         $filepath = WRITEPATH . 'uploads/' . $img->store($folder, $file);
                         return $this->response->setHeader('Content-Type', 'text/plain')->setStatusCode(200)->setBody($folder);
@@ -74,7 +74,7 @@ class Upload extends ResourceController
         } else {
             $file = $this->request->getFile('gallery');
             $fileName = $file->getRandomName();
-            $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder);
+            $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder, 0777, true);
             if ($createdFolder) {
                 $filepath = WRITEPATH . 'uploads/' . $file->store($folder, $fileName);
                 return $this->response->setHeader('Content-Type', 'text/plain')->setStatusCode(200)->setBody($folder);
@@ -92,7 +92,7 @@ class Upload extends ResourceController
         if ($img != null) {
             if (!$img->hasMoved()) {
                 $file = $img->getRandomName();
-                $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder);
+                $createdFolder = mkdir(WRITEPATH . 'uploads/' . $folder, 0777, true);
                 if ($createdFolder) {
                     $filepath = WRITEPATH . 'uploads/' . $img->store($folder, $file);
                     return $this->response->setHeader('Content-Type', 'text/plain')->setStatusCode(200)->setBody($folder);
