@@ -153,6 +153,18 @@ class Package extends ResourcePresenter
         return view('web/detail_package', $data);
     }
 
+    public function maps($id)
+    {
+        $contents = $this->PackageModel->get_list_tp_api_by_id($id);
+        // dd($contents);
+        $data = [
+            'title' => 'Package',
+            'data' => $contents,
+        ];
+
+
+        return view('maps/package', $data);
+    }
     /**
      * Present a view to present a new single resource object
      *

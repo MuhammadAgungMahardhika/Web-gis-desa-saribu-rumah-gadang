@@ -62,7 +62,7 @@ $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes)
     $routes->get('event/maps', 'Event::maps');
     $routes->get('event/detail/(:segment)', 'Event::detail/$1');
     $routes->presenter('event');
-    $routes->get('package/maps', 'Package::maps');
+    $routes->get('package/maps/(:segment)', 'Package::maps/$1');
     $routes->get('package/detail/(:segment)', 'Package::detail/$1');
     $routes->get('package/costum/new', 'Package::newCostum/$1');
     $routes->post('package/costum/saveCostum', 'Package::saveCostum');

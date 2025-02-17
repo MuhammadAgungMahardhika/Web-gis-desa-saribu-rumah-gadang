@@ -44,6 +44,71 @@ class PackageModel extends Model
         return $query;
     }
 
+    public function get_list_tp_api_by_id($id)
+    {
+        $columns = "{$this->table}.id as id,{$this->table}.id_package_type,{$this->table}.name,{$this->table}.price,{$this->table}.capacity,{$this->table}.cp as contact_person,{$this->table}.description,{$this->table}.url";
+
+        // Menjalankan query untuk mengambil data package
+        $query = $this->db->table($this->table)
+            ->select("{$columns}")
+            ->join('detail_package', 'tourism_package.id = detail_package.id_package')
+            ->where('tourism_package.id', $id)
+            ->get();
+
+        // Ambil hasil query dengan getResult(), yang mengembalikan objek
+        $result = $query->getResult(); // Ini mengembalikan objek, bukan array
+
+        // Memeriksa apakah ada hasil
+        if (count($result) > 0) {
+            $package = (array) $result[0]; // Mengubah objek pertama menjadi array
+
+            // Ambil data detail_package terpisah dan format sebagai array
+            $detail_query = $this->db->table('detail_package')
+                ->where('id_package', $id)
+                ->get();
+
+            // Mengambil semua detail_package dan mengkonversinya ke array
+            $details = $detail_query->getResultArray(); // getResultArray() tersedia di sini
+
+            // Menambahkan data detail_package ke dalam package
+            foreach ($details as &$detail) {
+                // Ambil data objek terkait berdasarkan id_object
+                $id_object = $detail['id_object'];
+
+                // Ambil data berdasarkan id_object, misalnya dari tabel atraction
+                $object_query = $this->db->table('atraction')
+                    ->select('id,name, lat, lng')
+                    ->where('id', $id_object)
+                    ->get();
+
+                // Cek apakah ada data objek
+                $object = $object_query->getRowArray(); // Mengambil data objek pertama dalam bentuk array
+
+                if ($object) {
+                    // Ganti id_object dengan data objek (name, lat, lng)
+                    $detail['object'] = [
+                        'id' => $object['id'],
+                        'name' => $object['name'],
+                        'lat' => $object['lat'],
+                        'lng' => $object['lng']
+                    ];
+                }
+
+                // Hapus id_object dari detail karena sudah diganti dengan data objek
+                unset($detail['id_object']);
+            }
+
+            // Menambahkan detail_package yang sudah dimodifikasi ke dalam package
+            $package['detail_package'] = $details;
+
+            return $package; // Kembalikan data dengan format yang diinginkan
+        }
+
+        return null; // Jika tidak ada data ditemukan
+    }
+
+
+
     public function list_by_owner_api($id = null)
     {
         // $coords = "ST_Y(ST_Centroid({$this->table}.geom)) AS lat, ST_X(ST_Centroid({$this->table}.geom)) AS lng";
