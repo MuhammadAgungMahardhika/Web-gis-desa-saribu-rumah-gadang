@@ -1,0 +1,5 @@
+activity,id_day,id_package,id_object,activity_type,description
+1,D01,P01,C01,-,-
+2,D01,P01,C02,-,-
+3,D02,P02,S01,-,-
+4,D02,P02,S02,-,-

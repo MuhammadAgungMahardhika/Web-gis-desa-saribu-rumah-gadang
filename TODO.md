@@ -1,0 +1,4 @@
+- [ ] list rumah gadang (map)
+- [ ] list objek wisata (map)
+- [ ] Booking homestay (ai)
+- [ ] Booking Paket wisata (ai)

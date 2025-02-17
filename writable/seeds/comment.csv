@@ -1,0 +1,41 @@
+id_comment,status,id_rumah_gadang,id_event,id_unique_place,comment,date,rating,id_user
+W001,1,R01,,,Tempat yang bagus untuk melihat dan mempelajari peninggalan sejarah,2021-11-14 16:05:23,4,1
+W002,1,R02,,,Fasilitas di rumah gadangnya masi autentik,2021-11-25 16:29:14,4,2
+W003,1,R03,,,Tempatnya sangat mudah dikunjungi,2022-01-28 06:52:16,5,3
+W004,1,R04,,,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2022-01-18 04:44:37,5,4
+W005,1,R05,,,Menjadi salah satu tempat wisata sekaligus bisa melestarikan peninggalan sejarah,2022-04-28 15:54:21,4,1
+W006,1,R06,,,Tempat yang bagus untuk melihat dan mempelajari peninggalan sejarah,2021-11-21 21:00:42,5,2
+W007,1,R07,,,Fasilitas di rumah gadangnya masi autentik,2021-10-01 15:46:02,5,3
+W008,1,R08,,,Tempatnya sangat mudah dikunjungi,2021-10-27 19:33:23,5,4
+W009,1,R09,,,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2021-11-07 15:15:21,5,1
+W010,1,R10,,,Menjadi salah satu tempat wisata sekaligus bisa melestarikan peninggalan sejarah,2022-04-14 16:18:26,4,2
+W011,2,,E01,,Menarik!,2021-12-13 17:18:12,4,1
+W012,2,,E02,,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2021-11-14 16:05:23,5,1
+W013,2,,E03,,Keren,2021-11-25 16:29:14,5,2
+W014,2,,E04,,Bagus sekali,2022-01-28 06:52:16,4,3
+W015,2,,E05,,Info yang menarik,2022-01-18 04:44:37,5,4
+W016,1,R01,,,Menjadi salah satu tempat wisata sekaligus bisa melestarikan peninggalan sejarah,2022-01-18 04:44:37,5,2
+W017,1,R02,,,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2022-04-28 15:54:21,4,3
+W018,1,R03,,,Tempatnya sangat mudah dikunjungi,2021-11-21 21:00:42,4,4
+W019,1,R04,,,Fasilitas di rumah gadangnya masi autentik,2021-10-01 15:46:02,5,1
+W020,1,R05,,,Tempat yang bagus untuk melihat dan mempelajari peninggalan sejarah,2021-10-27 19:33:23,5,2
+W021,1,R06,,,Menjadi salah satu tempat wisata sekaligus bisa melestarikan peninggalan sejarah,2021-11-07 15:15:21,4,3
+W022,1,R07,,,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2022-04-14 16:18:26,5,4
+W023,1,R08,,,Tempatnya sangat mudah dikunjungi,2021-12-13 17:18:12,5,1
+W024,1,R09,,,Fasilitas di rumah gadangnya masi autentik,2022-06-01 18:12:25,4,2
+W025,1,R10,,,Tempat yang bagus untuk melihat dan mempelajari peninggalan sejarah,2022-05-03 04:45:51,4,3
+W026,2,,E01,,Mantap,2022-01-22 18:06:26,5,4
+W027,2,,E02,,Keren sekali,2022-01-25 11:19:55,5,1
+W028,2,,E03,,Tidak salah berkunjung kesini,2021-12-10 05:03:50,5,2
+W029,2,,E04,,Tempatnya sangat mudah dikunjungi,2021-11-14 16:05:23,5,3
+W030,2,,E05,,Menarik!,2021-11-25 16:29:14,5,4
+W031,3,,,U01,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2022-01-28 06:52:16,5,1
+W032,3,,,U02,Keren,2022-01-18 04:44:37,4,2
+W033,3,,,U03,Bagus sekali,2022-04-28 15:54:21,5,3
+W034,3,,,U04,Info yang menarik,2021-11-21 21:00:42,5,4
+W035,3,,,U05,Mantap,2022-01-25 11:19:55,4,1
+W036,3,,,U01,Keren sekali,2021-12-10 05:03:50,4,2
+W037,3,,,U02,Tidak salah berkunjung kesini,2021-11-14 16:05:23,4,3
+W038,3,,,U03,Tempatnya sangat mudah dikunjungi,2021-11-25 16:29:14,5,4
+W039,3,,,U04,Menarik!,2022-01-28 06:52:16,5,1
+W040,3,,,U05,Aplikasi ini memudahkan dalam mencari tempat wisata di sekitarnya,2022-01-18 04:44:37,5,2

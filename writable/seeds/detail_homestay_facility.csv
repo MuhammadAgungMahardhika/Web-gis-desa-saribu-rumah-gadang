@@ -1,0 +1,30 @@
+id,id_homestay,id_homestay_facility,description
+01,H01,HF01,Kamar Mandi Bersama
+02,H01,HF02,Kamar Mandi Pribadi
+03,H01,HF03,Musholla
+04,H01,HF04,Sarapan Pagi
+05,H01,HF05,Televisi
+06,H01,HF06,Wifi Area
+07,H01,HF07,Kipas Angin
+08,H01,HF08,Air Conditioner
+09,H01,HF09,Selfie Area
+10,H03,HF01,Kamar Mandi Bersama
+11,H03,HF02,Kamar Mandi Pribadi
+12,H03,HF03,Musholla
+13,H03,HF04,Sarapan Pagi
+14,H03,HF05,Televisi
+15,H03,HF06,Wifi Area
+16,H03,HF07,Kipas Angin
+17,H04,HF01,Kamar Mandi Bersama
+18,H04,HF02,Kamar Mandi Pribadi
+19,H04,HF07,Kipas Angin
+20,H04,HF03,Musholla
+21,H04,HF04,Sarapan Pagi
+22,H04,HF05,Televisi
+23,H05,HF01,Kamar Mandi Bersama
+24,H05,HF07,Kipas Angin
+25,H05,HF03,Musholla
+26,H05,HF04,Sarapan Pagi
+27,H08,HF01,Kamar Mandi Bersama
+28,H08,HF07,Kipas Angin
+29,H08,HF04,Sarapan Pagi
