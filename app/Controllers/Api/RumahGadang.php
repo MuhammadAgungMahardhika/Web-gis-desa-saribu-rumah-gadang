@@ -38,10 +38,12 @@ class RumahGadang extends ResourceController
         foreach ($contents as $content) {
             $list_gallery = $this->galleryRumahGadangModel->get_gallery_api($content->id)->getResultArray();
             $galleries = array();
+
             foreach ($list_gallery as $gallery) {
                 $galleries[] = $gallery['url'];
             }
-            $content->gallery = $galleries[0];
+
+            $content->gallery = $galleries;
             $rumahGadang[] = $content;
         }
         $response = [

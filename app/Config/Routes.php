@@ -55,6 +55,9 @@ $routes->group('upload', ['namespace' => 'App\Controllers\Web'], function ($rout
 $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes) {
     $routes->get('homeStay/', 'RumahGadang::index2');
 
+    $routes->get('gemma/', 'Gemma::index');
+    $routes->post('gemma/ask', 'Gemma::ask');
+
     $routes->get('rumahGadang/maps', 'RumahGadang::maps');
     $routes->get('rumahGadang/detail/(:segment)', 'RumahGadang::detail/$1');
     $routes->presenter('rumahGadang');
