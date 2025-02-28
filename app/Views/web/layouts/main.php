@@ -44,17 +44,20 @@
 <body>
     <div id="app">
 
-        <!-- Sidebar -->
-        <?php if (isset($data) && array_key_exists('id', $data)) : ?>
-            <?= $this->include('web/layouts/sidebar_detail'); ?>
-        <?php else : ?>
-            <?= $this->include('web/layouts/sidebar'); ?>
+        <?php if (isset($currentUrl) != 'mobile'): ?>
+            <!-- Sidebar -->
+            <?php if (isset($data) && array_key_exists('id', $data)) : ?>
+                <?= $this->include('web/layouts/sidebar_detail'); ?>
+            <?php else : ?>
+                <?= $this->include('web/layouts/sidebar'); ?>
+            <?php endif; ?>
+            <!-- End Sidebar -->
         <?php endif; ?>
-        <!-- End Sidebar -->
-
         <!-- Main -->
         <div id="main">
-            <?= $this->include('web/layouts/header'); ?>
+            <?php if (isset($currentUrl) != 'mobile'): ?>
+                <?= $this->include('web/layouts/header'); ?>
+            <?php endif; ?>
             <!-- Content -->
             <?= $this->renderSection('content') ?>
             <!-- End Content -->
@@ -73,21 +76,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- Custom JS -->
     <?= $this->renderSection('javascript') ?>
-    <!-- <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            })
-        }, false);
 
-        $('#datepicker').datepicker({
-            format: 'yyyy-mm-dd',
-        });
-        $('#datepickerVH').datepicker({
-            format: 'yyyy-mm-dd',
-        });
-    </script> -->
 </body>
 
 </html>
