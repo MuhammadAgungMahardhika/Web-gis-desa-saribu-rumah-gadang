@@ -92,17 +92,9 @@
 
                     <div class="row">
                         <div class="col">
-                            <p class="fw-bold">Service (Include)</p>
+                            <p class="fw-bold">Service</p>
                             <?php $i = 1; ?>
                             <?php foreach ($data['services'] as $service) : ?>
-                                <p class="px-1"><?= esc($i) . '. ' . esc($service); ?></p>
-                                <?php $i++; ?>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="col">
-                            <p class="fw-bold">Service (Exclude)</p>
-                            <?php $i = 1; ?>
-                            <?php foreach ($data['servicesExclude'] as $service) : ?>
                                 <p class="px-1"><?= esc($i) . '. ' . esc($service); ?></p>
                                 <?php $i++; ?>
                             <?php endforeach; ?>

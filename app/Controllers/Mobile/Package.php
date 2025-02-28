@@ -81,12 +81,7 @@ class Package extends ResourcePresenter
         foreach ($list_service as $service) {
             $services[] = $service['name'];
         }
-        // service exclude
-        $list_service = $this->DetailServicePackageModel->get_service_by_package_api_exclude($id)->getResultArray();
-        $servicesExclude = array();
-        foreach ($list_service as $service) {
-            $servicesExclude[] = $service['name'];
-        }
+
 
         // package type
         if ($package['id_package_type'] != null) {
@@ -103,7 +98,6 @@ class Package extends ResourcePresenter
 
         $package['avg_rating'] = $avg_rating;
         $package['services'] = $services;
-        $package['servicesExclude'] = $servicesExclude;
         $package['reviews'] = $list_review;
         $package['package_day'] = $package_day;
         $package['gallery'] = [$package['url']];

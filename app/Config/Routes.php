@@ -58,6 +58,7 @@ $routes->group('mobile', ['namespace' => 'App\Controllers\Mobile'], function ($r
     $routes->get('package/', 'Package::index');
     $routes->get('package/(:segment)', 'Package::show/$1');
     $routes->get('package/maps/(:segment)', 'Package::maps/$1');
+    $routes->get('gemma/', 'Gemma::index');
 });
 // App
 $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes) {
