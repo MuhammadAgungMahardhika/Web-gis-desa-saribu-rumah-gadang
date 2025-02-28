@@ -35,6 +35,6 @@ class Gemma extends ResourcePresenter
             'currentUrl' => $this->currentUrl
         ];
 
-        return view('mobile/package', $data);
+        return view('mobile/gemma', $data);
     }
 }
