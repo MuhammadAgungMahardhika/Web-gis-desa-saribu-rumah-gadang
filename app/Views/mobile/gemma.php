@@ -4,17 +4,18 @@
 
 <section class="section">
     <div class="container-fluid">
-        <div class="card p-2 shadow-sm">
+        <div class="card p-2">
             <div class="card-header text-center card-title mb-2">Gemini AI</div>
             <div class="card-body">
                 <div class="chat-box mb-3 p-2 border rounded bg-light" id="chat-box" style="height: 300px; overflow-y: auto;">
                     <p class="text-muted text-center">Percakapan akan muncul di sini...</p>
                 </div>
-                <div class="row d-flex">
-                    <input type="text" id="input" class="form-control" placeholder="Ketik pesan...">
-                </div>
-                <div class="d-flex justify-content-between mt-2">
-                    <button class="btn btn-danger" id="clear-chat">Hapus Riwayat</button>
+                <div class="input-group">
+                    <input type="text" id="input" class="form-control border rounded-2" placeholder="Ketik pesan..." style="box-shadow: none;">
+                    <button class="btn btn-primary" id="send-btn" style="box-shadow: none;">Kirim</button>
+                    <button class="btn btn-light border ms-2 p-2" id="clear-chat" style="box-shadow: none;" title="hapus riyawat chat">
+                        🗑
+                    </button>
                 </div>
             </div>
         </div>
@@ -29,43 +30,40 @@
         loadChatHistory();
     });
 
-    document.querySelector("#input").addEventListener("keypress", async function(event) {
+    document.querySelector("#send-btn").addEventListener("click", sendMessage);
+    document.querySelector("#input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
-            let message = this.value.trim();
-            if (!message) return;
-
-            let chatBox = document.querySelector("#chat-box");
-            appendMessage("user", message);
-            this.value = "";
-
-            let response = await fetch("<?= site_url('mobile/gemma/processRequest') ?>", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: `message=${encodeURIComponent(message)}`
-            });
-
-            let result = await response.json();
-
-            if (result.error) {
-                appendMessage("error", "Error: " + result.error);
-            } else {
-                appendMessage("ai", result.response);
-            }
-
-            saveChatHistory();
+            sendMessage();
         }
     });
 
-    document.querySelector("#clear-chat").addEventListener("click", async function() {
-        let chatBox = document.querySelector("#chat-box");
-        chatBox.innerHTML = '<p class="text-muted text-center">Percakapan akan muncul di sini...</p>';
+    async function sendMessage() {
+        let inputField = document.querySelector("#input");
+        let message = inputField.value.trim();
+        if (!message) return;
 
+        appendMessage("user", message);
+        inputField.value = "";
+
+        let response = await fetch("<?= site_url('mobile/gemma/processRequest') ?>", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `message=${encodeURIComponent(message)}`
+        });
+
+        let result = await response.json();
+        appendMessage(result.error ? "error" : "ai", result.error ? "Error: " + result.error : result.response);
+
+        saveChatHistory();
+    }
+
+    document.querySelector("#clear-chat").addEventListener("click", async function() {
+        document.querySelector("#chat-box").innerHTML = '<p class="text-muted text-center">Percakapan akan muncul di sini...</p>';
         await fetch("<?= site_url('mobile/gemma/resetChat') ?>", {
             method: "GET"
         });
-
         localStorage.removeItem("chatHistory");
     });
 
@@ -73,11 +71,10 @@
         let chatBox = document.querySelector("#chat-box");
         let messageElement = document.createElement("div");
 
-        messageElement.classList.add("p-3", "rounded", "mb-2", "border", "shadow");
+        messageElement.classList.add("p-3", "border", "mb-2", "rounded");
 
-        // Set background putih
         messageElement.style.backgroundColor = "#ffffff";
-        messageElement.style.color = "#000000"; // Teks hitam
+        messageElement.style.color = "#000000";
 
         if (role === "user") {
             messageElement.classList.add("border-primary", "text-end");
@@ -88,22 +85,18 @@
         }
 
         messageElement.textContent = message;
-
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-
     function saveChatHistory() {
-        let chatBox = document.querySelector("#chat-box");
-        localStorage.setItem("chatHistory", chatBox.innerHTML);
+        localStorage.setItem("chatHistory", document.querySelector("#chat-box").innerHTML);
     }
 
     function loadChatHistory() {
-        let chatBox = document.querySelector("#chat-box");
         let savedHistory = localStorage.getItem("chatHistory");
         if (savedHistory) {
-            chatBox.innerHTML = savedHistory;
+            document.querySelector("#chat-box").innerHTML = savedHistory;
         }
     }
 </script>
