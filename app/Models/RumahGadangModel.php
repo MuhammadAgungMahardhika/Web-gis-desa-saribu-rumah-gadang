@@ -75,7 +75,14 @@ class RumahGadangModel extends Model
             ->get();
         return $query;
     }
-
+    public function get_list_rg_ai()
+    {
+        $columns = "{$this->table}.name";
+        $query = $this->db->table($this->table)
+            ->select("{$columns}")
+            ->get();
+        return $query;
+    }
     public function get_list_rg_api()
     {
         //$coords = "ST_Y(ST_Centroid({$this->table}.geom)) AS lat, ST_X(ST_Centroid({$this->table}.geom)) AS lng";

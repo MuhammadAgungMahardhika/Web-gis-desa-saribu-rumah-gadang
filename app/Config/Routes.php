@@ -59,6 +59,8 @@ $routes->group('mobile', ['namespace' => 'App\Controllers\Mobile'], function ($r
     $routes->get('package/(:segment)', 'Package::show/$1');
     $routes->get('package/maps/(:segment)', 'Package::maps/$1');
     $routes->get('gemma/', 'Gemma::index');
+    $routes->post('gemma/processRequest', 'Gemma::processRequest');
+    $routes->get('gemma/resetChat', 'Gemma::resetChat');
 });
 // App
 $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes) {
