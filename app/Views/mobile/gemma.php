@@ -4,21 +4,21 @@
 
 <section class="section">
     <div class="container-fluid">
-        <div class="card p-2">
-            <div class="card-header text-center card-title mb-2">Gemini AI</div>
-            <div class="card-body">
-                <div class="chat-box mb-3 p-2 border rounded bg-light" id="chat-box" style="height: 300px; overflow-y: auto;">
-                    <p class="text-muted text-center">Percakapan akan muncul di sini...</p>
-                </div>
-                <div class="input-group">
-                    <input type="text" id="input" class="form-control border rounded-2" placeholder="Ketik pesan..." style="box-shadow: none;">
-                    <button class="btn btn-primary" id="send-btn" style="box-shadow: none;">Kirim</button>
-                    <button class="btn btn-light border ms-2 p-2" id="clear-chat" style="box-shadow: none;" title="hapus riyawat chat">
-                        🗑
-                    </button>
-                </div>
-            </div>
+
+        <p class="text-center mb-3">Desa Wisata Saribu Rumah gadang </p>
+        <p class="text-center">Support With Gemini AI</p>
+
+        <div class="chat-box mb-3 p-2 border rounded bg-light" id="chat-box" style="height: 400px; overflow-y: auto;">
+            <p class="text-muted text-center">Percakapan akan muncul di sini...</p>
         </div>
+        <div class="input-group">
+            <input type="text" id="input" class="form-control border rounded-2" placeholder="Ketik pesan..." style="box-shadow: none;">
+            <button class="btn btn-primary" id="send-btn" style="box-shadow: none;">Kirim</button>
+            <button class="btn btn-light border ms-2 p-2" id="clear-chat" style="box-shadow: none;" title="hapus riyawat chat">
+                🗑
+            </button>
+        </div>
+
     </div>
 </section>
 
