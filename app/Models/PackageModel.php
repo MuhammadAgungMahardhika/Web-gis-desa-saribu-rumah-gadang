@@ -25,17 +25,7 @@ class PackageModel extends Model
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;
 
-    public function get_list_tp_ai()
-    {
 
-        $columns = "{$this->table}.name,{$this->table}.price";
-        $query = $this->db->table($this->table)
-            ->select("{$columns}")
-            ->where('tourism_package.costum !=', '1')
-            ->get();
-
-        return $query;
-    }
 
     // API
     public function get_list_tp_api($withCostume = null)

@@ -239,7 +239,7 @@ class Gemma extends ResourcePresenter
     // Fungsi untuk mendapatkan daftar Paket Wisata
     public function getPaketWisata()
     {
-        $data = $this->modelPackage->get_list_tp_ai()->getResultArray();
+        $data = $this->modelPackage->get_list_tp_api()->getResultArray();
 
         if (empty($data)) {
             return $this->response->setJSON(["response" => "Saat ini belum ada paket wisata yang tersedia di Desa Wisata Saribu Rumah Gadang."]);
@@ -249,7 +249,9 @@ class Gemma extends ResourcePresenter
 
         foreach ($data as $index => $paket) {
             $hargaFormatted = number_format($paket['price'], 0, ',', '.');
-            $responseText .= ($index + 1) . ". <b>" . htmlspecialchars($paket['name']) . "</b> - Harga: Rp {$hargaFormatted}<br>";
+            $capacity = $paket['capacity'];
+            $description =  $paket['description'] ? "Keterangan : {$paket['description']} <br>" : null;
+            $responseText .= ($index + 1) . ". <b>" . htmlspecialchars($paket['name']) . "</b> - Harga: Rp {$hargaFormatted}, Kapasitas : {$capacity} orang<br>{$description}";
         }
 
         return $this->response->setJSON(["response" => $responseText]);
