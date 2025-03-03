@@ -3,6 +3,7 @@
 namespace App\Controllers\Mobile;
 
 use App\Models\PackageModel;
+use App\Models\ReservationModel;
 use App\Models\RumahGadangModel;
 use CodeIgniter\RESTful\ResourcePresenter;
 use stdClass;
@@ -16,12 +17,14 @@ class Gemma extends ResourcePresenter
 
     protected $modelRumahGadang;
     protected $modelPackage;
+    protected $modelReservation;
 
     public function __construct()
     {
         $this->currentUrl = 'mobile';
         $this->modelRumahGadang = new RumahGadangModel();
         $this->modelPackage = new PackageModel();
+        $this->modelReservation = new ReservationModel();
     }
 
     // Menampilkan halaman utama
@@ -117,6 +120,32 @@ class Gemma extends ResourcePresenter
                         "properties" => new stdClass()
                     ]
                 ]
+            ],
+            [
+                "type" => "function",
+                "function" => [
+                    "name" => "make_reservation_ai",
+                    "description" => "Membuat reservasi paket wisata di Desa Wisata Saribu Rumah Gadang untuk pengguna yang sedang login.",
+                    "parameters" => [
+                        "type" => "object",
+                        "properties" => [
+                            "package_id" => [
+                                "type" => "string",
+                                "description" => "ID paket wisata yang ingin dipesan."
+                            ],
+                            "reservationDate" => [
+                                "type" => "string",
+                                "format" => "date",
+                                "description" => "Tanggal reservasi dalam format YYYY-MM-DD."
+                            ],
+                            "numberPeople" => [
+                                "type" => "integer",
+                                "description" => "Jumlah orang yang ikut dalam reservasi."
+                            ],
+                        ],
+                        "required" => ["package_id", "reservationDate", "numberPeople"]
+                    ]
+                ]
             ]
         ];
         $data = [
@@ -173,6 +202,17 @@ class Gemma extends ResourcePresenter
 
             case "get_paket_wisata":
                 return $this->getPaketWisata();
+            case "make_reservation_ai":
+                // Pastikan semua parameter yang diperlukan ada
+                if (!isset($arguments['package_id'], $arguments['reservationDate'], $arguments['numberPeople'])) {
+                    return $this->response->setJSON(["error" => "Parameter tidak lengkap untuk reservasi."]);
+                }
+
+                // Ambil parameter dengan nilai default jika tidak disertakan
+                $package_id =  $arguments['package_id'];
+                $reservationDate = $arguments['reservationDate'];
+                $numberPeople = (int) $arguments['numberPeople'];
+                return $this->makeReservationAI($package_id, $reservationDate, $numberPeople);
 
             default:
                 return $this->response->setJSON(['error' => "Function '$functionName' not recognized"]);
@@ -229,7 +269,7 @@ class Gemma extends ResourcePresenter
         }
 
         foreach ($data as $index => $rumah) {
-            $responseText .= ($index + 1) . ". " . strip_tags($rumah['name']) . "<br>";
+            $responseText .= ($index + 1) .  ". " . "(" . strip_tags($rumah['id']) . ") <b>"  . strip_tags($rumah['name']) . "</b><br>";
         }
 
         return $this->response->setJSON(["response" => $responseText]);
@@ -251,9 +291,64 @@ class Gemma extends ResourcePresenter
             $hargaFormatted = number_format($paket['price'], 0, ',', '.');
             $capacity = $paket['capacity'];
             $description =  $paket['description'] ? "Keterangan : {$paket['description']} <br>" : null;
-            $responseText .= ($index + 1) . ". <b>" . htmlspecialchars($paket['name']) . "</b> - Harga: Rp {$hargaFormatted}, Kapasitas : {$capacity} orang<br>{$description}";
+            $responseText .= ($index + 1) .  ". " . "(" . htmlspecialchars($paket['id']) . ") " . "<b>" . htmlspecialchars($paket['name']) . "</b> - Harga: Rp {$hargaFormatted}, Kapasitas : {$capacity} orang<br>{$description}";
         }
 
         return $this->response->setJSON(["response" => $responseText]);
+    }
+
+    // 🔥 Fungsi untuk menangani reservasi AI
+    public function makeReservationAI($package_id, $reservationDate, $numberPeople)
+    {
+        $user_id = user()->id;
+        // Dapatkan data paket wisata
+        $package = $this->modelPackage->find($package_id);
+
+        if (!$package) {
+            return $this->response->setJSON(["error" => "Paket wisata tidak ditemukan."]);
+        }
+
+        $capacity = $package['capacity'];
+        $price = $package['price'];
+
+        // Cek apakah jumlah orang melebihi kapasitas
+        if ($numberPeople <= 0) {
+            return $this->response->setJSON(["error" => "Minimal 1 orang untuk reservasi."]);
+        }
+
+        if ($numberPeople > $capacity) {
+            return $this->response->setJSON(["error" => "Kapasitas maksimal adalah {$capacity} orang."]);
+        }
+
+        // Cek apakah tanggal reservasi valid (H-1 minimal)
+        $today = date('Y-m-d');
+        if ($reservationDate <= $today) {
+            return $this->response->setJSON(["error" => "Tanggal reservasi harus minimal H-1 dari hari ini."]);
+        }
+
+        // Cek apakah user sudah reservasi di tanggal yang sama
+        $existingReservation = $this->modelReservation
+            ->where('id_user', $user_id)
+            ->where('request_date', $reservationDate)
+            ->first();
+
+        if ($existingReservation) {
+            return $this->response->setJSON(["error" => "Anda sudah memiliki reservasi pada tanggal yang sama."]);
+        }
+
+        // Simpan reservasi baru
+        $reservationData = [
+            'id' =>   $this->modelReservation->get_new_id_api(),
+            'id_user' => $user_id,
+            'id_package' => $package_id,
+            'request_date' => $reservationDate,
+            'id_reservation_status' => 1, // pending status
+            'number_people' => $numberPeople,
+            'total_price' => $numberPeople * $price,
+        ];
+
+        $this->modelReservation->add_r_api($reservationData);
+
+        return $this->response->setJSON(["response" => "Reservasi berhasil dibuat untuk paket : {$package['name']}, tanggal {$reservationDate}. Silahkan melakukan pembayaran!"]);
     }
 }
