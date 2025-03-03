@@ -84,7 +84,7 @@
             messageElement.classList.add("border-danger");
         }
 
-        messageElement.textContent = message;
+        messageElement.innerHTML = message; // Ganti textContent dengan innerHTML
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
