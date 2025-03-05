@@ -68,14 +68,13 @@ class Gemma extends ResourcePresenter
                 [
                     [
                         "role" => "system",
-                        "content" => "Gunakan bahasa Indonesia. Kamu adalah AI yang memberi informasi tentang Aplikasi Desa Wisata Saribu.Jika ada yang menyapa maka sapa balik dengan ramah dan arahkan untuk mengunjungi desa.
-                        Gunakan fungsi berikut sesuai kebutuhan:
-                        - `getWeather` hanya jika pengguna bertanya tentang cuaca.
-                        - `getRumahGadang` hanya jika pengguna bertanya tentang daftar Rumah Gadang.
-                        - `getPaketWisata` hanya jika pengguna bertanya tentang paket wisata.
-                        - `makePackageReservationAi` hanya jika pengguna memesan/booking/reservasi paket wisata yang ditentukan.
-                        - `makeHomestayReservationAi` hanya jika pengguna memesan/booking/reservasi rumah gadang (homestay) yang ditentukan.
-                        "
+                        "content" => "You are an AI providing information about the Saribu Tourism Village Application.
+                        Use the following functions as needed, do not run one of these if user not asking:
+                        - `getWeather` only if the user asks about the weather.
+                        - `getRumahGadang` only if the user asks about the list of Rumah Gadang.
+                        - `getPaketWisata` only if the user asks about tour packages.
+                        - `makePackageReservationAi` only if the user requests to book a specific tour package.
+                        - `makeHomestayReservationAi` only if the user requests to book a specific Rumah Gadang (homestay)."
                     ]
                 ],
                 $history
@@ -85,14 +84,14 @@ class Gemma extends ResourcePresenter
                     "type" => "function",
                     "function" => [
                         "name" => "get_weather",
-                        "description" => "Mendapatkan informasi cuaca untuk Desa Wisata Saribu Rumah Gadang.",
+                        "description" => "Only when user asked,Retrieve weather information for Saribu Rumah Gadang Tourism Village.",
                         "parameters" => [
                             "type" => "object",
                             "properties" => [
                                 "location" => [
                                     "type" => "string",
-                                    "description" => "Nama lokasi tetap untuk mendapatkan informasi cuaca.",
-                                    "enum" => ["Desa Wisata Saribu Rumah Gadang"]
+                                    "description" => "Fixed location name to get weather information.",
+                                    "enum" => ["Saribu Rumah Gadang Tourism Village"]
                                 ]
                             ],
                             "required" => ["location"]
@@ -103,16 +102,15 @@ class Gemma extends ResourcePresenter
                     "type" => "function",
                     "function" => [
                         "name" => "get_rumah_gadang",
-                        "description" => "Mendapatkan daftar Rumah Gadang yang tersedia di Desa Wisata Saribu Rumah Gadang.",
+                        "description" => "Only when user asked,Retrieve a list of Rumah Gadang available in Saribu Rumah Gadang Tourism Village.",
                         "parameters" => [
                             "type" => "object",
                             "properties" => [
                                 "homestay" => [
                                     "type" => "boolean",
-                                    "description" => "Jika true, hanya menampilkan Rumah Gadang yang berfungsi sebagai homestay."
+                                    "description" => "If true, only display Rumah Gadang that function as homestays."
                                 ]
-                            ],
-                            "required" => []
+                            ]
                         ]
                     ]
                 ],
@@ -120,7 +118,7 @@ class Gemma extends ResourcePresenter
                     "type" => "function",
                     "function" => [
                         "name" => "get_paket_wisata",
-                        "description" => "Mendapatkan daftar Paket Wisata yang tersedia di Desa Wisata Saribu Rumah Gadang.",
+                        "description" => "Only when user asked,Retrieve a list of available tour packages in Saribu Rumah Gadang Tourism Village.",
                         "parameters" => [
                             "type" => "object",
                             "properties" => new stdClass()
@@ -131,26 +129,26 @@ class Gemma extends ResourcePresenter
                     "type" => "function",
                     "function" => [
                         "name" => "make_package_reservation_ai",
-                        "description" => "Membuat reservasi paket wisata di Desa Wisata Saribu Rumah Gadang untuk pengguna yang sedang login.",
+                        "description" => "Make a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
                         "parameters" => [
                             "type" => "object",
                             "properties" => [
-                                "package_id" => [
+                                "packageId" => [
                                     "type" => "string",
-                                    "description" => "ID paket wisata yang ingin dipesan. Kosongkan jika ingin mencari berdasarkan nama paket."
+                                    "description" => "ID of the tour package to be booked. Leave empty to search by package name."
                                 ],
-                                "package_name" => [
+                                "packageName" => [
                                     "type" => "string",
-                                    "description" => "Nama paket wisata yang ingin dipesan. Jika 'package_id' sudah diisi, parameter ini bisa dikosongkan."
+                                    "description" => "Name of the tour package to be booked. If 'packageId' is provided, this parameter can be omitted."
                                 ],
                                 "requestDate" => [
                                     "type" => "string",
                                     "format" => "date",
-                                    "description" => "Tanggal reservasi dalam format YYYY-MM-DD."
+                                    "description" => "Reservation date in YYYY-MM-DD format."
                                 ],
                                 "numberPeople" => [
                                     "type" => "integer",
-                                    "description" => "Jumlah orang yang ikut dalam reservasi."
+                                    "description" => "Number of people included in the reservation."
                                 ],
                             ],
                             "required" => ["requestDate", "numberPeople"]
@@ -160,29 +158,45 @@ class Gemma extends ResourcePresenter
                 [
                     "type" => "function",
                     "function" => [
-                        "name" => "make_homestay_reservation_ai",
-                        "description" => "Membuat reservasi homestay di Desa Wisata Saribu Rumah Gadang untuk pengguna yang sedang login.",
+                        "name" => "remove_package_reservation_ai",
+                        "description" => "Remove or abort a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
                         "parameters" => [
                             "type" => "object",
                             "properties" => [
-                                "homestay_id" => [
+                                "reservationId" => [
                                     "type" => "string",
-                                    "description" => "ID homestay yang ingin dipesan."
+                                    "description" => "ID of the reservation"
+                                ],
+                            ],
+                            "required" => ["reservationId"]
+                        ]
+                    ]
+                ],
+                [
+                    "type" => "function",
+                    "function" => [
+                        "name" => "make_homestay_reservation_ai",
+                        "description" => "Make a homestay reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
+                        "parameters" => [
+                            "type" => "object",
+                            "properties" => [
+                                "homestayId" => [
+                                    "type" => "string",
+                                    "description" => "ID of the homestay to be booked."
                                 ],
                                 "requestDate" => [
                                     "type" => "string",
                                     "format" => "date",
-                                    "description" => "Tanggal reservasi dalam format YYYY-MM-DD."
+                                    "description" => "Start date of reservation in YYYY-MM-DD format."
                                 ],
                                 "requestDateEnd" => [
                                     "type" => "string",
                                     "format" => "date",
-                                    "description" => "Tanggal akhir reservasi dalam format YYYY-MM-DD."
+                                    "description" => "End date of reservation in YYYY-MM-DD format."
                                 ],
-
                                 "numberPeople" => [
                                     "type" => "integer",
-                                    "description" => "Jumlah orang yang ikut dalam reservasi."
+                                    "description" => "Number of people included in the reservation."
                                 ],
                             ],
                             "required" => ["homestay_id", "requestDate", "numberPeople"]
@@ -190,14 +204,17 @@ class Gemma extends ResourcePresenter
                     ]
                 ]
             ];
+
             $data = [
                 "model" => $model,
                 "messages" => $message,
                 "max_tokens" => 300,
-                "temperature" => 1,
+                "temperature" => 0.9,
+                "top_p" => 1,
                 "tools" => $tools,
                 "tool_choice" => "auto",
-                "max_completion_tokens" => 4096
+                "max_completion_tokens" => 4096,
+
             ];
 
             // Kirim request ke API
@@ -250,9 +267,9 @@ class Gemma extends ResourcePresenter
                 return $this->getPaketWisata();
 
             case "make_package_reservation_ai":
-                // Jika package_id tidak ada, cari berdasarkan nama paket
-                if (empty($arguments['package_id']) && !empty($arguments['package_name'])) {
-                    $packageName = $arguments['package_name'];
+                // Jika packageId tidak ada, cari berdasarkan nama paket
+                if (empty($arguments['packageId']) && !empty($arguments['packageName'])) {
+                    $packageName = $arguments['packageName'];
 
                     $package = $this->modelPackage
                         ->where("SOUNDEX(name)", soundex($packageName))
@@ -265,7 +282,7 @@ class Gemma extends ResourcePresenter
                         ]);
                     }
 
-                    $arguments['package_id'] = $package['id'];
+                    $arguments['packageId'] = $package['id'];
                 }
 
                 if (!isset($arguments['requestDate'])) {
@@ -276,24 +293,30 @@ class Gemma extends ResourcePresenter
                 }
 
                 // Ambil parameter dengan nilai default jika tidak disertakan
-                $package_id = $arguments['package_id'];
+                $package_id = $arguments['packageId'];
                 $requestDate = $arguments['requestDate'];
                 $numberPeople = (int) $arguments['numberPeople'];
 
                 return $this->makePackageReservationAI($package_id, $requestDate, $numberPeople);
 
+            case "remove_package_reservation_ai":
+                if (!isset($arguments['reservationId'])) {
+                    return $this->response->setJSON(["response" => "tidak ada kode reservasi"]);
+                }
+                $reservationId = $arguments['reservationId'];
+                return $this->removePackageReservationAI($reservationId);
             case "make_homestay_reservation_ai":
                 // Pastikan semua parameter yang diperlukan ada
-                if (!isset($arguments['homestay_id'], $arguments['requestDate'], $arguments['numberPeople'])) {
+                if (!isset($arguments['homestayId'], $arguments['requestDate'], $arguments['numberPeople'])) {
                     return $this->response->setJSON(["error" => "Parameter tidak lengkap untuk reservasi."]);
                 }
 
                 // Ambil parameter dengan nilai default jika tidak disertakan
-                $homestay_id =  $arguments['homestay_id'];
+                $homestayId =  $arguments['homestayId'];
                 $requestDate = $arguments['requestDate'];
                 $numberPeople = (int) $arguments['numberPeople'];
 
-                return $this->makeHomestayReservationAI($homestay_id, $requestDate, $numberPeople);
+                return $this->makeHomestayReservationAI($homestayId, $requestDate, $numberPeople);
 
             default:
                 return $this->response->setJSON(['error' => "Function '$functionName' not recognized"]);
@@ -434,8 +457,9 @@ class Gemma extends ResourcePresenter
             }
 
             // Simpan reservasi baru
+            $id =  $this->modelReservation->get_new_id_api();
             $reservationData = [
-                'id' =>   $this->modelReservation->get_new_id_api(),
+                'id' =>  $id,
                 'id_user' => $user_id,
                 'id_package' => $package_id,
                 'request_date' => $requestDate,
@@ -446,26 +470,35 @@ class Gemma extends ResourcePresenter
 
             $this->modelReservation->add_r_api($reservationData);
 
-            return $this->response->setJSON(["response" => "Reservasi berhasil dibuat untuk paket : {$package['name']}, tanggal {$requestDate}. Silahkan melakukan pembayaran!"]);
+            $reservationData = $this->modelReservation->find($id);
+            $reservationPeople = $reservationData['number_people'];
+            $reservationTotalPrice  =  number_format($reservationData['total_price'], 0, ',', '.');
+            return $this->response->setJSON(["response" => "Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$package['name']}-{$reservationPeople} orang - tanggal {$requestDate} - total harga {$reservationTotalPrice} </u></b>.<br> Silahkan melakukan pembayaran!"]);
         } catch (Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
 
-    public function removePackageReservationAI($package_id)
+    public function removePackageReservationAI($reservationId)
     {
         try {
             if (!logged_in()) {
-                throw new Exception("Mohon login untuk memesan paket");
+                throw new Exception("Mohon login untuk membatalkan paket");
             }
             $user_id = user()->id;
 
             // Dapatkan data paket wisata
-            $package = $this->modelReservation->where('id_package', $package_id);
-
-            if (!$package) {
+            $reservation = $this->modelReservation
+                ->where('id_user', $user_id)
+                ->where('id', $reservationId)
+                ->first();
+            if (!$reservation) {
                 throw new Exception("Reservasi tidak ditemukan.");
             }
+            $this->modelReservation->delete($reservationId);
+            // remove reservation
+            return  $this->response->setJSON(["response" => "Berhasil membatalkan reservasi <b><u>{$reservationId}</u></b>"]);
         } catch (Exception $e) {
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
