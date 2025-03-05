@@ -496,6 +496,9 @@ class Gemma extends ResourcePresenter
             if (!$reservation) {
                 throw new Exception("Reservasi tidak ditemukan.");
             }
+            if ($reservation['id_reservation_status'] != 1) {
+                throw new Exception("Reservasi tidak dapat dibatalkan!.");
+            }
             $this->modelReservation->delete($reservationId);
             // remove reservation
             return  $this->response->setJSON(["response" => "Berhasil membatalkan reservasi <b><u>{$reservationId}</u></b>"]);
