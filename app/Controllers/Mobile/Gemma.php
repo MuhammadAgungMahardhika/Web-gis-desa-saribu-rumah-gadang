@@ -54,7 +54,6 @@ class Gemma extends ResourcePresenter
             if (!$message) {
                 return $this->response->setJSON(['error' => 'Message is required'])->setStatusCode(400);
             }
-
             // Ambil history chat
             $history = session()->get('chat_history') ?? [];
             if (count($history) > 5) {
@@ -68,7 +67,7 @@ class Gemma extends ResourcePresenter
                 [
                     [
                         "role" => "system",
-                        "content" => "You are an AI providing information about the Saribu Tourism Village Application.
+                        "content" => "You are an AI providing information about the Saribu Rumah Gadang Tourism Village Application.
                         Use the following functions as needed, do not run one of these if user not asking:
                         - `getWeather` only if the user asks about the weather.
                         - `getRumahGadang` only if the user asks about the list of Rumah Gadang.
@@ -258,7 +257,6 @@ class Gemma extends ResourcePresenter
         switch ($functionName) {
             case "get_weather":
                 return $this->getWeather(); // Tidak perlu argumen karena lokasinya tetap
-
             case "get_rumah_gadang":
                 $homestay = isset($arguments['homestay']) ? ($arguments['homestay'] ? "true" : "false") : null;
                 return $this->getRumahGadang($homestay);
@@ -308,7 +306,7 @@ class Gemma extends ResourcePresenter
             case "make_homestay_reservation_ai":
                 // Pastikan semua parameter yang diperlukan ada
                 if (!isset($arguments['homestayId'], $arguments['requestDate'], $arguments['numberPeople'])) {
-                    return $this->response->setJSON(["error" => "Parameter tidak lengkap untuk reservasi."]);
+                    return $this->response->setJSON(["response" => "Parameter tidak lengkap untuk reservasi."]);
                 }
 
                 // Ambil parameter dengan nilai default jika tidak disertakan
@@ -328,28 +326,35 @@ class Gemma extends ResourcePresenter
     // Fungsi untuk mendapatkan cuaca
     public function getWeather()
     {
-        $apiKey = "2390a9743ed947a7ab68238ae3039af1";
-        $lat = "-1.4815029";
-        $lng = "101.0574556";
-        $apiUrl = "https://api.openweathermap.org/data/2.5/weather?lat={$lat}&lon={$lng}&appid={$apiKey}&lang=id&units=metric";
+        try {
+            $apiKey = "2390a9743ed947a7ab68238ae3039af1";
+            $lat = "-1.4815029";
+            $lng = "101.0574556";
+            $apiUrl = "https://api.openweathermap.org/data/2.5/weather?lat={$lat}&lon={$lng}&appid={$apiKey}&lang=id&units=metric";
 
-        $ch = curl_init($apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        curl_close($ch);
+            $ch = curl_init($apiUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            curl_close($ch);
 
-        $data = json_decode($response, true);
-        if (!$data || isset($data['cod']) && $data['cod'] != 200) {
-            return $this->response->setJSON(['error' => 'Gagal mendapatkan data cuaca.']);
+            $data = json_decode($response, true);
+            if (!$data || isset($data['cod']) && $data['cod'] != 200) {
+                return $this->response->setJSON(['error' => 'Gagal mendapatkan data cuaca.']);
+            }
+
+            $weatherDescription = ucfirst($data['weather'][0]['description']);
+            $temperature = $data['main']['temp'];
+
+
+            return $this->response->setJSON([
+                "response" => "Saat ini cuaca di Desa Wisata Saribu Rumah Gadang adalah <b>{$weatherDescription}</b>, dengan suhu sekitar **<b>{$temperature}°C</b> <br>" . "Selalu berhati2 diperjalanan!"
+            ]);
+        } catch (Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            return $this->response->setJSON([
+                "response" => $e->getMessage()
+            ]);
         }
-
-        $weatherDescription = ucfirst($data['weather'][0]['description']);
-        $temperature = $data['main']['temp'];
-
-
-        return $this->response->setJSON([
-            "response" => "Saat ini cuaca di Desa Wisata Saribu Rumah Gadang adalah <b>{$weatherDescription}</b>, dengan suhu sekitar **<b>{$temperature}°C</b> <br>" . "Selalu berhati2 diperjalanan!"
-        ]);
     }
 
     // Fungsi untuk mendapatkan daftar Rumah Gadang
@@ -374,13 +379,14 @@ class Gemma extends ResourcePresenter
 
             foreach ($data as $index => $rumah) {
                 $price = !empty($rumah['ticket_price'])
-                    ? "Harga: Rp " . number_format($rumah['ticket_price'], 0, ',', '.') . "/ malam"
+                    ? "Harga: Rp " . number_format($rumah['ticket_price'], 0, ',', '.') . "/ malam <br>"
                     : "";
-                $responseText .= ($index + 1) .  ". " . "(" . strip_tags($rumah['id']) . ") <b>"  . strip_tags($rumah['name']) . "</b><br>" . $price . "<br>";
+                $responseText .= ($index + 1) .  ". " . "(" . strip_tags($rumah['id']) . ") <b>"  . strip_tags($rumah['name']) . "</b><br>" . $price;
             }
 
             return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
@@ -405,8 +411,10 @@ class Gemma extends ResourcePresenter
                 $responseText .= ($index + 1) .  ". " . "(" . htmlspecialchars($paket['id']) . ") " . "<b>" . htmlspecialchars($paket['name']) . "</b> - Harga: Rp {$hargaFormatted}, Kapasitas : {$capacity} orang<br>{$description}";
             }
 
+            $responseText .=  "<br>Anda dapat memesan paket wisata dengan menyebutkan nama paket yang ingin dipesan, lalu jumlah orang yang ikut, dan tanggal reservasi yang diinginkan,<br> <span class='text-success'>Contoh:  pesankan saya paket A untuk 5 orang pada tanggal 5 Maret 2025</span>";
             return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
