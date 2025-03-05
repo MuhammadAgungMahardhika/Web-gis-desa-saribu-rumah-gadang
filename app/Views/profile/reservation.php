@@ -72,7 +72,8 @@
                     <thead>
                         <tr>
                             <th class="text-start"> #</th>
-                            <th class="text-start"> Tourism package name / ID </th>
+                            <th class="text-start"> Tourism package code </th>
+                            <th class="text-start"> Tourism package name </th>
                             <th class="text-start"> Booking date </th>
                             <th class="text-start"> Booking status </th>
                             <th class="text-start"> Progress detail</th>
@@ -128,7 +129,8 @@
                                 ?>
                                 <tr>
                                     <td class="text-start text-sm"> <?= $no; ?> </td>
-                                    <td class="text-start text-sm"> <?= $packageName; ?></td>
+                                    <td class="text-start text-sm"><?= $item['id']; ?> </td>
+                                    <td class="text-start text-sm"><?= $packageName; ?></td>
                                     <td class="text-start text-sm"> <?= $requestDate; ?> </td>
                                     <td class="text-start text-sm" style="min-width: 250px;">
                                         <a class="btn  btn-sm text-sm">
