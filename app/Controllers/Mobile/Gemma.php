@@ -128,6 +128,17 @@ class Gemma extends ResourcePresenter
                 [
                     "type" => "function",
                     "function" => [
+                        "name" => "get_reservation",
+                        "description" => "Only when user asked,Retrieve reservation history of logged user.",
+                        "parameters" => [
+                            "type" => "object",
+                            "properties" => new stdClass()
+                        ]
+                    ]
+                ],
+                [
+                    "type" => "function",
+                    "function" => [
                         "name" => "make_package_reservation_ai",
                         "description" => "Make a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
                         "parameters" => [
@@ -270,7 +281,8 @@ class Gemma extends ResourcePresenter
 
             case "get_paket_wisata":
                 return $this->getPaketWisata();
-
+            case "get_reservation":
+                return $this->getReservation();
             case "make_package_reservation_ai":
                 // Jika packageId tidak ada, cari berdasarkan nama paket
                 if (empty($arguments['packageId']) && !empty($arguments['packageName'])) {
@@ -504,6 +516,54 @@ class Gemma extends ResourcePresenter
             $reservationPeople = $reservationData['number_people'];
             $reservationTotalPrice  =  number_format($reservationData['total_price'], 0, ',', '.');
             return $this->response->setJSON(["response" => "<span class='text-success'>Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$package['name']}-{$reservationPeople} orang - tanggal {$requestDate} - total harga {$reservationTotalPrice} </u></b>.</span><br> Silahkan melakukan pembayaran!"]);
+        } catch (Exception $e) {
+            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            return $this->response->setJSON(["response" => $e->getMessage()]);
+        }
+    }
+
+    public function getReservation()
+    {
+        try {
+            $userId = user()->id;
+            $reservations = $this->modelReservation->get_r_by_id_user_api($userId)->getResultArray();
+
+            if (empty($reservations)) {
+                throw new Exception("Anda tidak memiliki pesanan / reservasi apapun.");
+            }
+
+            $responseText = "📌 *Riwayat Reservasi Anda:*<br><br>";
+            $index = 1;
+
+            foreach ($reservations as $reservation) {
+                $reservationId  = $reservation['id'];
+                $homestay = $reservation['id_homestay'] ?? 'Tidak diketahui';
+                $package = $reservation['id_package'] ?? 'Tidak diketahui';
+                $date = $reservation['request_date'];
+                $endDate = $reservation['request_date_end'] ? " - " . $reservation['request_date_end'] : null;
+                $status = "pending";
+                if ($reservation['id_reservation_status'] == 2) {
+                    $status = "confirmed";
+                } else  if ($reservation['id_reservation_status'] == 3) {
+                    $status = "cancel";
+                } else  if ($reservation['id_reservation_status'] == 4) {
+                    $status = "paid";
+                } else  if ($reservation['id_reservation_status'] == 5) {
+                    $status = "finish";
+                }
+                $totalPrice = number_format($reservation['total_price'], 0, ',', '.');
+
+                $responseText .= "{$index}. 🏠 *Kode reservasi:* {$reservationId}<br>";
+                $responseText .= " 🏠 *Homestay:* {$homestay}<br>";
+                $responseText .= " 📦 *Paket:* {$package}<br>";
+                $responseText .= " 📅 *Tanggal:* {$date} {$endDate}<br>";
+                $responseText .= " 💰 *Total Harga:* Rp {$totalPrice}<br>";
+                $responseText .= " 📌 *Status:* {$status}<br><br>";
+
+                $index++;
+            }
+
+            return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
