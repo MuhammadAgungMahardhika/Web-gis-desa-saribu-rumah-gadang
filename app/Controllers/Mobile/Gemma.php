@@ -7,6 +7,7 @@ use App\Models\PackageModel;
 use App\Models\ReservationModel;
 use App\Models\RumahGadangModel;
 use CodeIgniter\RESTful\ResourcePresenter;
+use DateTime;
 use Exception;
 use stdClass;
 
@@ -157,31 +158,18 @@ class Gemma extends ResourcePresenter
                 [
                     "type" => "function",
                     "function" => [
-                        "name" => "remove_package_reservation_ai",
-                        "description" => "Remove or abort a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => [
-                                "reservationId" => [
-                                    "type" => "string",
-                                    "description" => "ID of the reservation"
-                                ],
-                            ],
-                            "required" => ["reservationId"]
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
                         "name" => "make_homestay_reservation_ai",
-                        "description" => "Make a homestay reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
+                        "description" => "Make a rumah gadang / homestay reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
                         "parameters" => [
                             "type" => "object",
                             "properties" => [
-                                "homestayId" => [
+                                "rumahGadangId" => [
                                     "type" => "string",
-                                    "description" => "ID of the homestay to be booked."
+                                    "description" => "ID of the rumah gadang to be booked."
+                                ],
+                                "rumahGadangOrHomestayName" => [
+                                    "type" => "string",
+                                    "description" => "Name of the rumah gadang / homestay to be booked. If 'rumah gadang id ' is provided, this parameter can be omitted."
                                 ],
                                 "requestDate" => [
                                     "type" => "string",
@@ -198,10 +186,28 @@ class Gemma extends ResourcePresenter
                                     "description" => "Number of people included in the reservation."
                                 ],
                             ],
-                            "required" => ["homestay_id", "requestDate", "numberPeople"]
+                            "required" => ["requestDate", "requestDateEnd", "numberPeople"]
                         ]
                     ]
-                ]
+                ],
+                [
+                    "type" => "function",
+                    "function" => [
+                        "name" => "remove_package_reservation_ai",
+                        "description" => "Remove or abort a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
+                        "parameters" => [
+                            "type" => "object",
+                            "properties" => [
+                                "reservationId" => [
+                                    "type" => "string",
+                                    "description" => "ID of the reservation"
+                                ],
+                            ],
+                            "required" => ["reservationId"]
+                        ]
+                    ]
+                ],
+
             ];
 
             $data = [
@@ -247,6 +253,8 @@ class Gemma extends ResourcePresenter
             session()->set('chat_history', $history);
             return $this->response->setJSON(['response' => $aiResponse]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
+            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(['response' => $e->getMessage()]);
         }
     }
@@ -304,18 +312,33 @@ class Gemma extends ResourcePresenter
                 $reservationId = $arguments['reservationId'];
                 return $this->removePackageReservationAI($reservationId);
             case "make_homestay_reservation_ai":
+                // Jika rumahGadangId tidak ada, cari berdasarkan nama paket
+                if (empty($arguments['rumahGadangId']) && !empty($arguments['rumahGadangOrHomestayName'])) {
+                    $rumahGadangOrHomestayName = $arguments['rumahGadangOrHomestayName'];
+                    $rumahGadang = $this->modelRumahGadang
+                        ->where('id_homestay IS NOT NULL', null, false)
+                        ->where("SOUNDEX(name)", soundex($rumahGadangOrHomestayName))
+                        ->orLike("name", $rumahGadangOrHomestayName, 'both')
+                        ->first();
+                    if (!$rumahGadang || empty($rumahGadang['id_homestay'])) {
+
+                        return $this->response->setJSON([
+                            "response" => "Homestay '{$rumahGadangOrHomestayName}' tidak ditemukan."
+                        ]);
+                    }
+                    $arguments['rumahGadangId'] = $rumahGadang['id'];
+                }
                 // Pastikan semua parameter yang diperlukan ada
-                if (!isset($arguments['homestayId'], $arguments['requestDate'], $arguments['numberPeople'])) {
+                if (!isset($arguments['rumahGadangId'], $arguments['requestDate'], $arguments['requestDateEnd'], $arguments['numberPeople'])) {
                     return $this->response->setJSON(["response" => "Parameter tidak lengkap untuk reservasi."]);
                 }
 
                 // Ambil parameter dengan nilai default jika tidak disertakan
-                $homestayId =  $arguments['homestayId'];
+                $rumahGadangId =  $arguments['rumahGadangId'];
                 $requestDate = $arguments['requestDate'];
+                $requestDateEnd = $arguments['requestDateEnd'];
                 $numberPeople = (int) $arguments['numberPeople'];
-
-                return $this->makeHomestayReservationAI($homestayId, $requestDate, $numberPeople);
-
+                return $this->makeHomestayReservationAI($rumahGadangId, $requestDate, $requestDateEnd, $numberPeople);
             default:
                 return $this->response->setJSON(['error' => "Function '$functionName' not recognized"]);
         }
@@ -350,6 +373,7 @@ class Gemma extends ResourcePresenter
                 "response" => "Saat ini cuaca di Desa Wisata Saribu Rumah Gadang adalah <b>{$weatherDescription}</b>, dengan suhu sekitar **<b>{$temperature}°C</b> <br>" . "Selalu berhati2 diperjalanan!"
             ]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON([
                 "response" => $e->getMessage()
@@ -386,6 +410,7 @@ class Gemma extends ResourcePresenter
 
             return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
@@ -414,6 +439,7 @@ class Gemma extends ResourcePresenter
             $responseText .=  "<br>Anda dapat memesan paket wisata dengan menyebutkan nama paket yang ingin dipesan, lalu jumlah orang yang ikut, dan tanggal reservasi yang diinginkan,<br> <span class='text-success'>Contoh:  pesankan saya paket A untuk 5 orang pada tanggal 5 Maret 2025</span>";
             return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
@@ -481,8 +507,9 @@ class Gemma extends ResourcePresenter
             $reservationData = $this->modelReservation->find($id);
             $reservationPeople = $reservationData['number_people'];
             $reservationTotalPrice  =  number_format($reservationData['total_price'], 0, ',', '.');
-            return $this->response->setJSON(["response" => "Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$package['name']}-{$reservationPeople} orang - tanggal {$requestDate} - total harga {$reservationTotalPrice} </u></b>.<br> Silahkan melakukan pembayaran!"]);
+            return $this->response->setJSON(["response" => "<span class='text-success'>Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$package['name']}-{$reservationPeople} orang - tanggal {$requestDate} - total harga {$reservationTotalPrice} </u></b>.</span><br> Silahkan melakukan pembayaran!"]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
@@ -511,70 +538,69 @@ class Gemma extends ResourcePresenter
             // remove reservation
             return  $this->response->setJSON(["response" => "Berhasil membatalkan reservasi <b><u>{$reservationId}</u></b>"]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
 
     // 🔥 Fungsi untuk menangani reservasi AI utk homestay
-    public function makeHomestayReservationAI($homestay_id, $requestDate, $numberPeople)
+    public function makeHomestayReservationAI($rumahGadangId,  $requestDate, $requestDateEnd)
     {
         try {
             if (!logged_in()) {
                 throw new Exception("Mohon login untuk memesan paket");
             }
-
             $user_id = user()->id;
-
             // Dapatkan data homestay
-            $homestay = $this->modelRumahGadang->where('id_homestay', $homestay_id);
-
-            if (!$homestay) {
+            $rumahGadang = $this->modelRumahGadang->find($rumahGadangId);
+            if (!$rumahGadang && empty($rumahGadang['id_homestay'])) {
                 throw new Exception("Homestay tidak ditemukan.");
             }
-
-            $capacity = $homestay['capacity'];
-            $price = $homestay['price'];
-
-            // Cek apakah jumlah orang melebihi kapasitas
-            if ($numberPeople <= 0) {
-                throw new Exception("Minimal 1 orang untuk reservasi.");
-            }
-
-            if ($numberPeople > $capacity) {
-                throw new Exception("Kapasitas maksimal adalah {$capacity} orang.");
-            }
+            $price = $rumahGadang['price_ticket'];
 
             // Cek apakah tanggal reservasi valid (H-1 minimal)
             $today = date('Y-m-d');
             if ($requestDate <= $today) {
                 throw new Exception("Tanggal reservasi harus minimal H-1 dari hari ini.");
             }
+            if ($requestDateEnd < $requestDate) {
+                throw new Exception("Tanggal berakhir reservasi harus lebih dari tanggal reservasi.");
+            }
 
             // Cek apakah user sudah reservasi di tanggal yang sama
             $existingReservation = $this->modelReservation
                 ->where('id_user', $user_id)
+                ->where('id_homestay', $rumahGadang['id_homestay'])
                 ->where('request_date', $requestDate)
                 ->first();
 
             if ($existingReservation) {
                 throw new Exception("Anda sudah memiliki reservasi pada tanggal yang sama.");
             }
+            // Pastikan $requestDate dan $requestDateEnd adalah string sebelum dikonversi
+            $requestDate = new DateTime((string) $requestDate);
+            $requestDateEnd = new DateTime((string) $requestDateEnd);
 
-            // Simpan reservasi baru
+            // Hitung selisih hari antara tanggal mulai dan tanggal akhir
+            $totalDay = $requestDate->diff($requestDateEnd)->days;
+
+            $requestDate =  $requestDate->format('Y-m-d');
+            $requestDateEnd = $requestDateEnd->format('Y-m-d');
+            // Simpan reservasi baru dengan format tanggal yang benar
             $reservationData = [
-                'id' =>   $this->modelReservation->get_new_id_api(),
+                'id' => $this->modelReservation->get_new_id_api(),
                 'id_user' => $user_id,
-                'id_homestay' => $homestay_id,
-                'request_date' => $requestDate,
+                'id_homestay' => $rumahGadang['id_homestay'],
+                'request_date' => $requestDate, // Pastikan diubah ke string
+                'request_date_end' => $requestDateEnd, // Pastikan diubah ke string
                 'id_reservation_status' => 1, // pending status
-                'number_people' => $numberPeople,
-                'total_price' => $numberPeople * $price,
+                'total_price' => $totalDay * $price,
             ];
 
             $this->modelReservation->add_r_api($reservationData);
-
-            return $this->response->setJSON(["response" => "Reservasi berhasil dibuat untuk paket : {$homestay['name']}, tanggal {$requestDate}. Silahkan melakukan pembayaran!"]);
+            return $this->response->setJSON(["response" => "<span class='text-success'>Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$rumahGadang['name']}, tanggal {$requestDate} - {$requestDateEnd}, total harga {$reservationData['total_price']} </u></b>.</span><br> Silahkan melakukan pembayaran!"]);
         } catch (Exception $e) {
+            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
