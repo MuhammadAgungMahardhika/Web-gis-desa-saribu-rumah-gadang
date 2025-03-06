@@ -253,7 +253,6 @@ class Gemma extends ResourcePresenter
             session()->set('chat_history', $history);
             return $this->response->setJSON(['response' => $aiResponse]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(['response' => $e->getMessage()]);
         }
@@ -373,7 +372,6 @@ class Gemma extends ResourcePresenter
                 "response" => "Saat ini cuaca di Desa Wisata Saribu Rumah Gadang adalah <b>{$weatherDescription}</b>, dengan suhu sekitar **<b>{$temperature}°C</b> <br>" . "Selalu berhati2 diperjalanan!"
             ]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON([
                 "response" => $e->getMessage()
@@ -410,7 +408,6 @@ class Gemma extends ResourcePresenter
 
             return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
@@ -439,7 +436,6 @@ class Gemma extends ResourcePresenter
             $responseText .=  "<br>Anda dapat memesan paket wisata dengan menyebutkan nama paket yang ingin dipesan, lalu jumlah orang yang ikut, dan tanggal reservasi yang diinginkan,<br> <span class='text-success'>Contoh:  pesankan saya paket A untuk 5 orang pada tanggal 5 Maret 2025</span>";
             return $this->response->setJSON(["response" => $responseText]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
@@ -509,7 +505,6 @@ class Gemma extends ResourcePresenter
             $reservationTotalPrice  =  number_format($reservationData['total_price'], 0, ',', '.');
             return $this->response->setJSON(["response" => "<span class='text-success'>Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$package['name']}-{$reservationPeople} orang - tanggal {$requestDate} - total harga {$reservationTotalPrice} </u></b>.</span><br> Silahkan melakukan pembayaran!"]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
@@ -538,7 +533,6 @@ class Gemma extends ResourcePresenter
             // remove reservation
             return  $this->response->setJSON(["response" => "Berhasil membatalkan reservasi <b><u>{$reservationId}</u></b>"]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
@@ -600,7 +594,6 @@ class Gemma extends ResourcePresenter
             $this->modelReservation->add_r_api($reservationData);
             return $this->response->setJSON(["response" => "<span class='text-success'>Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$rumahGadang['name']}, tanggal {$requestDate} - {$requestDateEnd}, total harga {$reservationData['total_price']} </u></b>.</span><br> Silahkan melakukan pembayaran!"]);
         } catch (Exception $e) {
-            echo $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
             return $this->response->setJSON(["response" => $e->getMessage()]);
         }
     }
