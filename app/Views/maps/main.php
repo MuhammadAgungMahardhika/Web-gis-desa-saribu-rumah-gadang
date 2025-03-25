@@ -53,23 +53,7 @@
 
     <!-- Custom JS -->
     <?= $this->renderSection('javascript') ?>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            })
-        }, false);
 
-        $('#datepicker').datepicker({
-            format: 'yyyy-mm-dd',
-            startDate: '-3d'
-        });
-        $('#datepickerVH').datepicker({
-            format: 'yyyy-mm-dd',
-            startDate: '-3d'
-        });
-    </script>
 </body>
 
 </html>

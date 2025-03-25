@@ -2410,7 +2410,7 @@ function findByDateEV(eventDate) {
   });
 }
 
-// api weather
+// API weather
 saribuWeather();
 function saribuWeather() {
   const apiWeather = "2390a9743ed947a7ab68238ae3039af1";
@@ -2439,20 +2439,37 @@ function saribuWeather() {
         windSpeed,
         iconUrl
       );
-      // Mengupdate elemen HTML
 
-      document.getElementById("weatherTemp").textContent = `${tempInCelsius}°C`;
-      document.getElementById("weatherCloud").textContent =
-        weatherDescription.charAt(0).toUpperCase() +
-        weatherDescription.slice(1);
-      document.getElementById(
-        "weatherHumidity"
-      ).textContent = `Humidity: ${humidity}%`;
-      document.getElementById(
-        "weatherWind"
-      ).textContent = `Wind: ${windSpeed} m/s`;
-      document.querySelector("#weather-info img").src = iconUrl;
+      // Memeriksa apakah elemen ada sebelum memperbarui kontennya
+      let weatherTempElement = document.getElementById("weatherTemp");
+      if (weatherTempElement) {
+        weatherTempElement.textContent = `${tempInCelsius}°C`;
+      }
+
+      let weatherCloudElement = document.getElementById("weatherCloud");
+      if (weatherCloudElement) {
+        weatherCloudElement.textContent =
+          weatherDescription.charAt(0).toUpperCase() +
+          weatherDescription.slice(1);
+      }
+
+      let weatherHumidityElement = document.getElementById("weatherHumidity");
+      if (weatherHumidityElement) {
+        weatherHumidityElement.textContent = `Humidity: ${humidity}%`;
+      }
+
+      let weatherWindElement = document.getElementById("weatherWind");
+      if (weatherWindElement) {
+        weatherWindElement.textContent = `Wind: ${windSpeed} m/s`;
+      }
+
+      let weatherIconElement = document.querySelector("#weather-info img");
+      if (weatherIconElement) {
+        weatherIconElement.src = iconUrl;
+      }
     },
-    error: function (err) {},
+    error: function (err) {
+      console.error("Error fetching weather data", err);
+    },
   });
 }
