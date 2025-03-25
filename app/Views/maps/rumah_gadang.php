@@ -1,8 +1,8 @@
-<?= $this->extend('maps/main'); ?>
+<?= $this->extend('layouts/main'); ?>
 
 <?= $this->section('content') ?>
 
-<?= $this->include('maps/map-body'); ?>
+<?= $this->include('layouts/map-body'); ?>
 <script>
     currentUrl = "mobile";
 </script>
