@@ -2430,7 +2430,7 @@ function saribuWeather() {
       const weatherDescription = data.weather[0].description;
       const humidity = data.main.humidity;
       const windSpeed = data.wind.speed;
-      const iconUrl = `http://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+      const iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
 
       console.log(
         tempInCelsius,
