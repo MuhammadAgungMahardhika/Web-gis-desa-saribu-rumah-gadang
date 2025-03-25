@@ -1,18 +1,18 @@
 let baseUrl = "";
 let currentUrl = "";
-let currentLat = 0,
-  currentLng = 0;
-let userLat = 0,
-  userLng = 0;
+let currentLat = 0;
+let currentLng = 0;
+let userLat = 0;
+let userLng = 0;
 let web, map;
 let infoWindow = new google.maps.InfoWindow();
 let userInfoWindow = new google.maps.InfoWindow();
 let directionsService, directionsRenderer;
 let userMarker = new google.maps.Marker();
 let destinationMarker = new google.maps.Marker();
-let routeArray = [],
-  circleArray = [],
-  markerArray = {};
+let routeArray = [];
+let circleArray = [];
+let markerArray = {};
 let bounds = new google.maps.LatLngBounds();
 let selectedShape,
   drawingManager = new google.maps.drawing.DrawingManager();

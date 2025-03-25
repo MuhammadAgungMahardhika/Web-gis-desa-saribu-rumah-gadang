@@ -11,29 +11,29 @@ class Profile extends ResourceController
 {
     use ResponseTrait;
     protected $auth;
-    
+
     /**
      * @var AuthConfig
      */
     protected $config;
-    
+
     /**
      * @var Session
      */
     protected $session;
-    
+
     protected $helpers = ['auth', 'filesystem'];
-    
+
     public function __construct()
     {
         // Most services in this controller require
         // the session to be started - so fire it up!
         $this->session = service('session');
-        
+
         $this->config = config('Auth');
         $this->auth = service('authentication');
     }
-    
+
     /**
      * Return an array of resource objects, themselves in array format
      *
@@ -103,25 +103,23 @@ class Profile extends ResourceController
     {
         //
     }
-    
+
     /**
      * Attempts to verify the user's credentials
      * through a POST request.
      */
     public function attemptLogin()
     {
-        
+
         $rules = [
-            'login'	=> 'required',
+            'login'    => 'required',
             'password' => 'required',
         ];
-        if ($this->config->validFields == ['email'])
-        {
+        if ($this->config->validFields == ['email']) {
             $rules['login'] .= '|valid_email';
         }
-        
-        if (! $this->validate($rules))
-        {
+
+        if (! $this->validate($rules)) {
             $contents = $this->validator->getErrors();
             $response = [
                 'data' => $contents,
@@ -132,16 +130,15 @@ class Profile extends ResourceController
             ];
             return $this->respond($response, 400);
         }
-        
+
         $login = $this->request->getPost('login');
         $password = $this->request->getPost('password');
-        
+
         // Determine credential type
         $type = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        
+
         // Try to log them in...
-        if (! $this->auth->attempt([$type => $login, 'password' => $password], false))
-        {
+        if (! $this->auth->attempt([$type => $login, 'password' => $password], false)) {
             $contents = $this->auth->error();
             $response = [
                 'data' => $contents,
@@ -152,10 +149,10 @@ class Profile extends ResourceController
             ];
             return $this->respond($response, 400);
         }
-        
+
         $redirectURL = session('redirect_url') ?? site_url('/web');
         unset($_SESSION['redirect_url']);
-    
+
         $contents = [
             'url' => $redirectURL,
             'user' => user(),
@@ -170,13 +167,12 @@ class Profile extends ResourceController
         ];
         return $this->respond($response, 200);
     }
-    
+
     public function profile()
     {
         $id = $this->request->getPost('id');
-        if (logged_in()){
-            if (user()->id == $id)
-            {
+        if (logged_in()) {
+            if (user()->id == $id) {
                 $contents = user();
                 $response = [
                     'data' => $contents,
@@ -188,7 +184,7 @@ class Profile extends ResourceController
                 return $this->respond($response, 200);
             }
         }
-        
+
         $response = [
             'status' => 400,
             'message' => [
@@ -197,14 +193,13 @@ class Profile extends ResourceController
         ];
         return $this->respond($response, 400);
     }
-    
+
     public function logout()
     {
-        if ($this->auth->check())
-        {
+        if ($this->auth->check()) {
             $this->auth->logout();
         }
-    
+
         $response = [
             'status' => 200,
             'message' => [
@@ -214,4 +209,3 @@ class Profile extends ResourceController
         return $this->respond($response, 200);
     }
 }
-
