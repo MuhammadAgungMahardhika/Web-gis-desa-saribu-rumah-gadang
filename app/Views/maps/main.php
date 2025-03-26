@@ -53,9 +53,9 @@
 </head>
 
 <body>
-    <div id="app">
-        <?= $this->renderSection('content') ?>
-    </div>
+
+    <?= $this->renderSection('content') ?>
+
     <!-- Template CSS -->
     <script src="<?= base_url('assets/js/app.js'); ?>"></script>
 
