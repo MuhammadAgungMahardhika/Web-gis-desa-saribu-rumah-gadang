@@ -19,22 +19,23 @@
     <!-- Icon iconly -->
     <link rel="stylesheet" href="<?= base_url('assets/css/shared/iconly.css'); ?>">
     <!-- Icon materialize -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,200,0,0" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/css/extensions/font.css') ?> " />
+    <link rel="stylesheet" href="<?= base_url('assets/css/extensions/icon.css') ?> " />
     <!-- Icon Font awesome -->
-    <script src="https://kit.fontawesome.com/de7d18ea4d.js" crossorigin="anonymous"></script>
-
+    <script src="<?= base_url('assets/js/extensions/font-awesome.js'); ?>"></script>
     <!-- datatable -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/extensions/jquery.dataTables.min.css') ?> " />
 
     <!-- Jquery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="<?= base_url('assets/js/extensions/jquery-3.6.0.min.js') ?>"></script>
     <!-- Sweet alert -->
     <script src="<?= base_url('assets/js/extensions/sweetalert2.js'); ?>"></script>
+
     <!-- Animate css -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="<?= base_url('assets/css/extensions/animate.min.css') ?> " />
+
     <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
+    <script src="<?= base_url('assets/js/extensions/gsap.min.js') ?>"></script>
     <!-- Google Maps API and Custom JS -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB8B04MTIk7abJDVESr6SUF6f3Hgt1DPAY&libraries=drawing"></script>
     <script src="<?= base_url('js/geom.js') ?>"></script>
@@ -75,7 +76,7 @@
 
     <script src="<?= base_url('assets/js/app.js'); ?>"></script>
     <!-- datatable -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="<?= base_url('assets/js/extensions/jquery.dataTables.min.js') ?>"></script>
     <!-- Custom JS -->
     <?= $this->renderSection('javascript') ?>
 
