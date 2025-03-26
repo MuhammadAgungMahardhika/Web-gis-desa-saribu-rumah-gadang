@@ -56,9 +56,6 @@
 
     <?= $this->renderSection('content') ?>
 
-    <!-- Template CSS -->
-    <script src="<?= base_url('assets/js/app.js'); ?>"></script>
-
     <!-- Custom JS -->
     <?= $this->renderSection('javascript') ?>
 
