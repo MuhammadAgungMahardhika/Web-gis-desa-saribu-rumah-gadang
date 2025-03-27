@@ -22,6 +22,7 @@ class Gemma extends ResourcePresenter
     protected $modelPackage;
     protected $modelReservation;
 
+    protected $userId = null;
     public function __construct()
     {
         $this->currentUrl = 'mobile';
@@ -52,8 +53,12 @@ class Gemma extends ResourcePresenter
     {
         try {
             $message = $this->request->getPost('message');
+            $this->userId = $this->request->getPost('userId');
             if (!$message) {
                 return $this->response->setJSON(['error' => 'Message is required'])->setStatusCode(400);
+            }
+            if (!$this->userId) {
+                return $this->response->setJSON(['error' => 'User is required'])->setStatusCode(400);
             }
             // Ambil history chat
             $history = session()->get('chat_history') ?? [];
@@ -454,13 +459,13 @@ class Gemma extends ResourcePresenter
     }
 
     // 🔥 Fungsi untuk menangani reservasi AI utk paket
-    public function makePackageReservationAI($package_id, $requestDate, $numberPeople)
+    public function makePackageReservationAI($package_id,  $requestDate, $numberPeople)
     {
         try {
-            if (!logged_in()) {
+            if (!$this->userId) {
                 throw new Exception("Mohon login untuk memesan paket");
             }
-            $user_id = user()->id;
+            $user_id = $this->userId;
 
             // Dapatkan data paket wisata
             $package = $this->modelPackage->find($package_id);
@@ -502,7 +507,7 @@ class Gemma extends ResourcePresenter
             $id =  $this->modelReservation->get_new_id_api();
             $reservationData = [
                 'id' =>  $id,
-                'id_user' => $user_id,
+                'id_user' =>  $user_id,
                 'id_package' => $package_id,
                 'request_date' => $requestDate,
                 'id_reservation_status' => 1, // pending status
@@ -525,7 +530,7 @@ class Gemma extends ResourcePresenter
     public function getReservation()
     {
         try {
-            $userId = user()->id;
+            $userId = $this->userId;
             $reservations = $this->modelReservation->get_r_by_id_user_api($userId)->getResultArray();
 
             if (empty($reservations)) {
@@ -573,10 +578,10 @@ class Gemma extends ResourcePresenter
     public function removePackageReservationAI($reservationId)
     {
         try {
-            if (!logged_in()) {
+            if (!$this->userId) {
                 throw new Exception("Mohon login untuk membatalkan paket");
             }
-            $user_id = user()->id;
+            $user_id = $this->userId;
 
             // Dapatkan data paket wisata
             $reservation = $this->modelReservation
@@ -601,10 +606,10 @@ class Gemma extends ResourcePresenter
     public function makeHomestayReservationAI($rumahGadangId,  $requestDate, $requestDateEnd)
     {
         try {
-            if (!logged_in()) {
+            if (!$this->userId) {
                 throw new Exception("Mohon login untuk memesan paket");
             }
-            $user_id = user()->id;
+            $user_id = $this->userId;
             // Dapatkan data homestay
             $rumahGadang = $this->modelRumahGadang->find($rumahGadangId);
             if (!$rumahGadang && empty($rumahGadang['id_homestay'])) {

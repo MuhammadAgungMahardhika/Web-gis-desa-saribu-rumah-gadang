@@ -1,12 +1,9 @@
-<?= $this->extend('web/layouts/main'); ?>
+<?= $this->extend('maps/main'); ?>
 
 <?= $this->section('content') ?>
 
 <section class="section">
-    <div class="container-fluid">
-
-        <p class="text-center mb-3">Desa Wisata Saribu Rumah gadang </p>
-        <p class="text-center">Support With Gemini AI</p>
+    <div class="container-fluid py-4">
 
         <div class="chat-box mb-3 p-2 border rounded bg-light" id="chat-box" style="height: 400px; overflow-y: auto;">
             <p class="text-muted text-center">Percakapan akan muncul di sini...</p>
@@ -26,6 +23,40 @@
 
 <?= $this->section('javascript') ?>
 <script>
+    // Fungsi untuk menyimpan dan mengelola User ID
+    const UserIdManager = {
+        saveUserIdToLocalStorage: function(userId) {
+            try {
+                localStorage.setItem('user_id', userId);
+                console.log('User ID berhasil disimpan di localStorage');
+            } catch (error) {
+                console.error('Gagal menyimpan User ID:', error);
+            }
+        },
+
+        getUserIdFromLocalStorage: function() {
+            try {
+                return localStorage.getItem('user_id') || null;
+            } catch (error) {
+                console.error('Gagal mengambil User ID:', error);
+                return null;
+            }
+        }
+    };
+
+    <?php if (logged_in()) :  ?>
+        UserIdManager.saveUserIdToLocalStorage('<?= user_id(); ?>')
+        console.log('<?= user_id(); ?>')
+    <?php else: ?>
+
+        console.log('tidak ada user loggin')
+    <?php endif; ?>
+
+    // Fungsi untuk menerima User ID dari B4A WebView
+    function receiveUserIdFromB4A(userId) {
+        UserIdManager.saveUserIdToLocalStorage(userId);
+        console.log('User ID diterima dari B4A:', userId);
+    }
     document.addEventListener("DOMContentLoaded", function() {
         loadChatHistory();
     });
@@ -44,13 +75,15 @@
 
         appendMessage("user", message);
         inputField.value = "";
-
+        // Ambil User ID dari localStorage
+        const userId = UserIdManager.getUserIdFromLocalStorage();
+        console.log(userId)
         let response = await fetch("<?= site_url('mobile/gemma/processRequest') ?>", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
             },
-            body: `message=${encodeURIComponent(message)}`
+            body: `message=${encodeURIComponent(message)}&userId=${encodeURIComponent(userId || '')}`
         });
 
         let result = await response.json();
