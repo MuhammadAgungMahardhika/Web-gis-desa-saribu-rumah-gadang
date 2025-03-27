@@ -25,28 +25,28 @@
 <script>
     // Fungsi untuk menyimpan dan mengelola User ID
     const UserIdManager = {
-        saveUserIdToLocalStorage: function(userId) {
+        saveUserIdToSessionStorage: function(userId) {
             try {
-                localStorage.setItem('user_id', userId);
-                console.log('User ID berhasil disimpan di localStorage');
+                sessionStorage.setItem('user_id', userId);
+                console.log('User ID berhasil disimpan di sessionStorage');
             } catch (error) {
-                console.error('Gagal menyimpan User ID:', error);
+                console.error('Gagal menyimpan User ID di sessionStorage:', error);
             }
         },
 
-        getUserIdFromLocalStorage: function() {
+        getUserIdFromSessionStorage: function() {
             try {
-                return localStorage.getItem('user_id') || null;
+                return sessionStorage.getItem('user_id') || null;
             } catch (error) {
-                console.error('Gagal mengambil User ID:', error);
+                console.error('Gagal mengambil User ID dari sessionStorage:', error);
                 return null;
             }
         }
     };
-
     <?php if (logged_in()) :  ?>
-        UserIdManager.saveUserIdToLocalStorage('<?= user_id(); ?>')
+        UserIdManager.saveUserIdToSessionStorage('<?= user_id(); ?>')
         console.log('<?= user_id(); ?>')
+        console.log('menyimpan dari user yang login')
     <?php else: ?>
 
         console.log('tidak ada user loggin')
@@ -54,7 +54,7 @@
 
     // Fungsi untuk menerima User ID dari B4A WebView
     function receiveUserIdFromB4A(userId) {
-        UserIdManager.saveUserIdToLocalStorage(userId);
+        UserIdManager.saveUserIdToSessionStorage(userId);
         console.log('User ID diterima dari B4A:', userId);
     }
     document.addEventListener("DOMContentLoaded", function() {
@@ -76,7 +76,7 @@
         appendMessage("user", message);
         inputField.value = "";
         // Ambil User ID dari localStorage
-        const userId = UserIdManager.getUserIdFromLocalStorage();
+        const userId = UserIdManager.getUserIdFromSessionStorage();
         console.log(userId)
         let response = await fetch("<?= site_url('mobile/gemma/processRequest') ?>", {
             method: "POST",
