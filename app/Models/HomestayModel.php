@@ -29,9 +29,10 @@ class HomestayModel extends Model
     // API
     public function get_list_hm_api()
     {
-        $columns = "{$this->table}.id,{$this->table}.name,{$this->table}.address,{$this->table}.checkin,{$this->table}.checkout,{$this->table}.cp as contact_person,{$this->table}.status,{$this->table}.price as ticket_price,{$this->table}.description,{$this->table}.url as video_url";
+        $columns = "{$this->table}.id,{$this->table}.name,{$this->table}.address,{$this->table}.checkin,{$this->table}.checkout,{$this->table}.cp as contact_person,{$this->table}.status,{$this->table}.price as ticket_price,{$this->table}.description,{$this->table}.url as video_url,id_rumah_gadang ";
         $query = $this->db->table($this->table)
             ->select("{$columns}")
+            ->join('rumah_gadang', 'rumah_gadang.id_homestay = homestay.id')
             ->get();
         return $query;
     }

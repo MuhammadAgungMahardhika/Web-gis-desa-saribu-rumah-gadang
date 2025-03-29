@@ -416,10 +416,7 @@
                             'Success to make reservation request',
                             '',
                             'success'
-                        ).then(() => {
-                            window.location.replace(baseUrl + '/web/reservation/' + user_id)
-                        });
-
+                        );
                     },
                     error: function(err) {
                         console.log(err.responseText)

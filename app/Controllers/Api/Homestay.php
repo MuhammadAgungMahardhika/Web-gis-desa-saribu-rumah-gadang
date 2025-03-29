@@ -6,6 +6,7 @@ use App\Models\HomestayModel;
 use App\Models\RumahGadangModel;
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\RESTful\ResourceController;
+use App\Models\GalleryRumahGadangModel;
 
 class Homestay extends ResourceController
 {
@@ -13,11 +14,12 @@ class Homestay extends ResourceController
 
     protected $homestayModel;
     protected $rumahGadangModel;
-
+    protected $galleryRumahGadangModel;
     public function __construct()
     {
         $this->homestayModel = new HomestayModel();
         $this->rumahGadangModel = new  RumahGadangModel();
+        $this->galleryRumahGadangModel = new GalleryRumahGadangModel();
     }
 
     /**
@@ -27,9 +29,21 @@ class Homestay extends ResourceController
      */
     public function index()
     {
+        $homeStay = array();
         $contents = $this->homestayModel->get_list_hm_api()->getResult();
+        foreach ($contents as $content) {
+            $list_gallery = $this->galleryRumahGadangModel->get_gallery_api($content->id_rumah_gadang)->getResultArray();
+            $galleries = array();
+
+            foreach ($list_gallery as $gallery) {
+                $galleries[] = $gallery['url'];
+            }
+
+            $content->gallery = $galleries;
+            $homeStay[] = $content;
+        }
         $response = [
-            'data' => $contents,
+            'data' => $homeStay,
             'status' => 200,
             'message' => [
                 "Success get list of homestay"

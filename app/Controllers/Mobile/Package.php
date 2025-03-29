@@ -122,7 +122,6 @@ class Package extends ResourcePresenter
             'currentUrl' => $this->currentUrl
         ];
 
-
-        return view('maps/package', $data);
+        return view('mobile/maps/package', $data);
     }
 }

@@ -1,9 +1,9 @@
-<?= $this->extend('maps/main'); ?>
+<?= $this->extend('web/layouts/main'); ?>
 
 <?= $this->section('content') ?>
 
 <section class="section">
-    <div class="container-fluid py-4">
+    <div class="container-fluid p-4">
 
         <div class="chat-box mb-3 p-2 border rounded bg-light" id="chat-box" style="height: 400px; overflow-y: auto;">
             <p class="text-muted text-center">Percakapan akan muncul di sini...</p>
@@ -97,7 +97,7 @@
         await fetch("<?= site_url('mobile/gemma/resetChat') ?>", {
             method: "GET"
         });
-        localStorage.removeItem("chatHistory");
+        sessionStorage.removeItem("chatHistory");
     });
 
     function appendMessage(role, message) {
@@ -123,11 +123,11 @@
     }
 
     function saveChatHistory() {
-        localStorage.setItem("chatHistory", document.querySelector("#chat-box").innerHTML);
+        sessionStorage.setItem("chatHistory", document.querySelector("#chat-box").innerHTML);
     }
 
     function loadChatHistory() {
-        let savedHistory = localStorage.getItem("chatHistory");
+        let savedHistory = sessionStorage.getItem("chatHistory");
         if (savedHistory) {
             document.querySelector("#chat-box").innerHTML = savedHistory;
         }
