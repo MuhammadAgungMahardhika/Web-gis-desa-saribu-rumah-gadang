@@ -2,9 +2,9 @@
 
 <?= $this->section('content') ?>
 
-<?= $this->include('web/map-body'); ?>
+<?= $this->include('web/layouts/map-body'); ?>
 <script>
-    currentUrl = "mobile";
+    currentUrl = '<?= $currentUrl ?>';
 </script>
 <?php
 
