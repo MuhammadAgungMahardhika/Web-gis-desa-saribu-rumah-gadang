@@ -146,7 +146,7 @@
             </div>
 
             <!--Rating and Review Section-->
-            <?= $this->include('web/layouts/review'); ?>
+
         </div>
 
         <div class="col-md-6 col-12">
@@ -176,8 +176,18 @@
 <?= $this->section('javascript') ?>
 
 <script>
+    <?php if (logged_in()) :  ?>
+        UserIdManager.saveUserIdToSessionStorage('<?= user_id(); ?>')
+        console.log('<?= user_id(); ?>')
+        console.log('menyimpan dari user yang login')
+    <?php else: ?>
+        console.log('tidak ada user loggin')
+    <?php endif; ?>
+
     function showReservationModal() {
-        <?php if (in_groups('user') && isset($data['homestayData'])) : ?>
+        let userId = UserIdManager.getUserIdFromSessionStorage()
+
+        if (userId) {
             $('#modalTitle').html("Reservation form")
             $('#modalBody').html(`
             <div class=" p-2">
@@ -286,12 +296,12 @@
                 todayHighlight: false
             });
 
-            $('#modalFooter').html(`<a class="btn btn-success" onclick="makeReservation(${<?= user()->id ?>})"> Make reservation </a>`)
-        <?php else : ?>
+            $('#modalFooter').html(`<a class="btn btn-success" onclick="makeReservation(${userId})"> Make reservation </a>`)
+        } else {
             $('#modalTitle').html('Login required')
             $('#modalBody').html('Login as user for reservation')
             $('#modalFooter').html(`<a class="btn btn-primary" href="/login"> Login </a> <a class="btn btn-primary" href="/regiter"> Register </a>`)
-        <?php endif; ?>
+        }
 
     }
 
@@ -351,7 +361,7 @@
         } else if (sameDateCheckResult == "true") {
             Swal.fire('The date is booked, please select another date', '', 'warning');
         } else {
-            <?php if (in_groups('user') && isset($data['homestayData'])) : ?>
+            if (user_id) {
                 let totalPrice = '<?= $data['homestayData']['ticket_price'] ?>'
                 let requestData = {
                     reservation_date: reservationDate,
@@ -383,7 +393,7 @@
                         console.log(err.responseText)
                     }
                 });
-            <?php endif; ?>
+            }
         }
     }
 

@@ -136,7 +136,7 @@
             </div>
 
             <!--Rating and Review Section-->
-            <?= $this->include('web/layouts/reviewPackage'); ?>
+
         </div>
 
         <div class="col-md-6 col-12">
@@ -160,6 +160,14 @@
 
 <?= $this->section('javascript') ?>
 <script>
+    <?php if (logged_in()) :  ?>
+        UserIdManager.saveUserIdToSessionStorage('<?= user_id(); ?>')
+        console.log('<?= user_id(); ?>')
+        console.log('menyimpan dari user yang login')
+    <?php else: ?>
+        console.log('tidak ada user loggin')
+    <?php endif; ?>
+
     let latBefore = ''
     let lngBefore = ''
 
@@ -220,7 +228,6 @@
                 success: function(response) {
                     let data = response.data
                     currentUrl = currentUrl + data.id
-                    console.log(data)
                     // flightPlanCoordinates.push(new google.maps.LatLng(data.lat, data.lng))
                     showObjectOnMap(objectNumber, data.id, data.lat, data.lng)
                     boundToObject()
@@ -292,7 +299,8 @@
 
 
     function showReservationModal() {
-        <?php if (in_groups('user')) : ?>
+        let userId = UserIdManager.getUserIdFromSessionStorage()
+        if (userId) {
             $('#modalTitle').html("Reservation form")
             $('#modalBody').html(`
             <div class=" p-2">
@@ -362,19 +370,18 @@
                 todayHighlight: true
             });
 
-            $('#modalFooter').html(`<a class="btn btn-success" onclick="makeReservation(${<?= user()->id ?>})"> Make reservation </a>`)
-        <?php else : ?>
+            $('#modalFooter').html(`<a class="btn btn-success" onclick="makeReservation(${userId})"> Make reservation </a>`)
+        } else {
             $('#modalTitle').html('Login required')
             $('#modalBody').html('Login as user for reservation')
             $('#modalFooter').html(`<a class="btn btn-primary" href="/login"> Login </a> <a class="btn btn-primary" href="/regiter"> Register </a>`)
-        <?php endif; ?>
+        }
     }
 
     function makeReservation(user_id) {
         let reservationDate = $("#reservation_date").val()
         let numberPeople = $("#number_people").val()
         let packagePrice = $("#package_price").val()
-        console.log(packagePrice)
         let comment = $("#comment").val()
         let package_id = '<?= $data['id'] ?>';
         let numberCheckResult = checkNumberPeople(numberPeople)
@@ -395,7 +402,7 @@
         } else if (sameDateCheckResult == "true") {
             Swal.fire('Already chose the same date! please select another date', '', 'warning');
         } else {
-            <?php if (in_groups('user')) : ?>
+            if (user_id) {
                 let requestData = {
                     reservation_date: reservationDate,
                     id_user: user_id,
@@ -422,7 +429,7 @@
                         console.log(err.responseText)
                     }
                 });
-            <?php endif; ?>
+            }
         }
     }
 

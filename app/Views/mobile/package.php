@@ -5,7 +5,7 @@
 <section class="section">
     <div class="container-fluid">
         <div class="card p-2 shadow-sm">
-            <div class="card-header text-center card-title  mb-2">LIST TOURISM PACKAGE</div>
+            <!-- <div class="card-header text-center card-title  mb-2">LIST TOURISM PACKAGE</div> -->
             <div class="card-body">
 
                 <div class="row d-flex">
@@ -30,7 +30,7 @@
 
                                         </div>
                                         <div class="card-footer text-end" style="border: none;">
-                                            <a role="button" class="btn btn-success" target="_blank" href="<?= base_url('mobile/package') . '/' . $item['id']; ?>">Detail</a>
+                                            <a role="button" class="btn btn-success" href="<?= base_url('mobile/package') . '/' . $item['id']; ?>">Detail</a>
                                         </div>
                                     </div>
                                 </div>

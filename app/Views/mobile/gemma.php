@@ -23,26 +23,6 @@
 
 <?= $this->section('javascript') ?>
 <script>
-    // Fungsi untuk menyimpan dan mengelola User ID
-    const UserIdManager = {
-        saveUserIdToSessionStorage: function(userId) {
-            try {
-                sessionStorage.setItem('user_id', userId);
-                console.log('User ID berhasil disimpan di sessionStorage');
-            } catch (error) {
-                console.error('Gagal menyimpan User ID di sessionStorage:', error);
-            }
-        },
-
-        getUserIdFromSessionStorage: function() {
-            try {
-                return sessionStorage.getItem('user_id') || null;
-            } catch (error) {
-                console.error('Gagal mengambil User ID dari sessionStorage:', error);
-                return null;
-            }
-        }
-    };
     <?php if (logged_in()) :  ?>
         UserIdManager.saveUserIdToSessionStorage('<?= user_id(); ?>')
         console.log('<?= user_id(); ?>')
@@ -52,11 +32,6 @@
         console.log('tidak ada user loggin')
     <?php endif; ?>
 
-    // Fungsi untuk menerima User ID dari B4A WebView
-    function receiveUserIdFromB4A(userId) {
-        UserIdManager.saveUserIdToSessionStorage(userId);
-        console.log('User ID diterima dari B4A:', userId);
-    }
     document.addEventListener("DOMContentLoaded", function() {
         loadChatHistory();
     });

@@ -97,7 +97,7 @@ function digitVillage() {
     dataType: "json",
     success: function (response) {
       const data = response.data;
-      console.log(data);
+
       village.addGeoJson(data);
       village.setStyle({
         fillColor: "#00b300",
@@ -1783,12 +1783,12 @@ function changeRecom(status = null) {
   if (status === "edit") {
     $("#recomBtnEdit").hide();
     $("#recomBtnExit").show();
-    console.log("entering edit mode");
+
     $(".recomSelect").on("change", updateRecom);
   } else {
     $("#recomBtnEdit").show();
     $("#recomBtnExit").hide();
-    console.log("exiting edit mode");
+
     $(".recomSelect").off("change", updateRecom);
   }
 }
@@ -2023,7 +2023,7 @@ function getListUsers(owner) {
     dataType: "json",
     success: function (response) {
       let data = response.data;
-      console.log(data);
+
       for (i in data) {
         let item = data[i];
         if (item.id == owner) {
@@ -2416,8 +2416,7 @@ function saribuWeather() {
   const apiWeather = "2390a9743ed947a7ab68238ae3039af1";
   const lat = -1.4815029;
   const lng = 101.0574556;
-  console.log(lat);
-  console.log(lng);
+
   $.ajax({
     url: `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiWeather}`,
     method: "get",
@@ -2425,20 +2424,11 @@ function saribuWeather() {
     success: function (response) {
       let data = response;
 
-      console.log(response);
       const tempInCelsius = (data.main.temp - 273.15).toFixed(2); // Konversi dari Kelvin ke Celsius
       const weatherDescription = data.weather[0].description;
       const humidity = data.main.humidity;
       const windSpeed = data.wind.speed;
       const iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
-
-      console.log(
-        tempInCelsius,
-        weatherDescription,
-        humidity,
-        windSpeed,
-        iconUrl
-      );
 
       // Memeriksa apakah elemen ada sebelum memperbarui kontennya
       let weatherTempElement = document.getElementById("weatherTemp");
@@ -2472,4 +2462,41 @@ function saribuWeather() {
       console.error("Error fetching weather data", err);
     },
   });
+}
+
+// user
+// Fungsi untuk menyimpan dan mengelola User ID
+const UserIdManager = {
+  saveUserIdToSessionStorage: function (userId) {
+    try {
+      sessionStorage.setItem("user_id", userId);
+      console.log("User ID berhasil disimpan di sessionStorage");
+    } catch (error) {
+      console.error("Gagal menyimpan User ID di sessionStorage:", error);
+    }
+  },
+
+  getUserIdFromSessionStorage: function () {
+    try {
+      return sessionStorage.getItem("user_id") || null;
+    } catch (error) {
+      console.error("Gagal mengambil User ID dari sessionStorage:", error);
+      return null;
+    }
+  },
+
+  removeUserIdFromSessionStorage: function () {
+    try {
+      sessionStorage.removeItem("user_id");
+      console.log("User ID berhasil dihapus dari sessionStorage");
+    } catch (error) {
+      console.error("Gagal menghapus User ID dari sessionStorage:", error);
+    }
+  },
+};
+
+// Fungsi untuk menerima User ID dari B4A WebView
+function receiveUserIdFromB4A(userId) {
+  UserIdManager.saveUserIdToSessionStorage(userId);
+  console.log("User ID diterima dari B4A:", userId);
 }
