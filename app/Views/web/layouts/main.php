@@ -65,7 +65,9 @@
             <!-- End Content -->
 
             <!-- Footer -->
-            <?= $this->include('web/layouts/footer') ?>
+            <?php if (isset($currentUrl) != 'mobile'): ?>
+                <?= $this->include('web/layouts/footer') ?>
+            <?php endif; ?>
             <!-- End Footer -->
         </div>
         <!-- End Main -->
