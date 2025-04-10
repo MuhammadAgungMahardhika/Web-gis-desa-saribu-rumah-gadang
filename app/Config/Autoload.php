@@ -46,6 +46,7 @@ class Autoload extends AutoloadConfig
         'Myth\Auth'   => APPPATH . 'ThirdParty/myth-auth/src',
     ];
 
+
     /**
      * -------------------------------------------------------------------
      * Class Map

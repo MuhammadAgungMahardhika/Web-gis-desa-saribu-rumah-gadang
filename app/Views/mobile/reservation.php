@@ -1,5 +1,4 @@
 <?= $this->extend('web/layouts/main'); ?>
-
 <?= $this->section('content') ?>
 <!-- Modal  -->
 <div class="modal fade text-left" id="reservationModal" tabindex="-1" aria-labelledby="myModalLabel1" style="display: none;" aria-hidden="true">
@@ -46,12 +45,11 @@
                                 </div>
                                 <div class="col-6 mb-2">
                                     <small class="text-muted">Price:</small>
-                                    <div><?= number_format($item['package_price'] ?? 0, 0, ',', '.') ?></div>
+                                    <div><?= number_format($item['total_price'] ?? 0, 0, ',', '.') ?></div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-2">
-
                                 <a class="btn btn-info me-1" title="confirm" data-bs-toggle="modal" data-bs-target="#reservationModal" onclick="showInfoReservation('<?= $item['id'] ?>')">
                                     <i class="bi bi-eye"></i>
                                 </a>
@@ -93,6 +91,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-ZBFmbRHLtloBk5Sc"></script>
+
 <script>
     $(document).ready(function() {
         // Check/uncheck all checkboxes
@@ -194,7 +194,7 @@
         });
 
         function proceedToCheckout(itemIds) {
-            console.log(itemIds)
+            console.log(itemIds);
             $.ajax({
                 url: '<?= base_url('mobile/reservation/checkout') ?>',
                 type: 'POST',
@@ -203,19 +203,49 @@
                 },
                 dataType: 'json',
                 success: function(response) {
+                    console.log(response);
                     if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Items checked out successfully!'
-                        }).then(() => {
-                            window.location.href = response.redirect || '<?= base_url('mobile/payment') ?>';
+                        // Buka halaman pembayaran Midtrans
+                        snap.pay(response.snap_token, {
+                            onSuccess: function(result) {
+                                console.log('success', result);
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Pembayaran Berhasil',
+                                    text: 'Terima kasih atas pembayaran Anda!'
+                                }).then(() => {
+                                    window.location.href = '<?= base_url('mobile/reservation/paymentSuccess') ?>?order_id=' + response.order_id;
+                                });
+                            },
+                            onPending: function(result) {
+                                console.log('pending', result);
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Pembayaran Tertunda',
+                                    text: 'Silakan selesaikan pembayaran Anda!'
+                                });
+                            },
+                            onError: function(result) {
+                                console.log('error', result);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Pembayaran Gagal',
+                                    text: 'Terjadi kesalahan saat memproses pembayaran!'
+                                });
+                            },
+                            onClose: function() {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Pembayaran Dibatalkan',
+                                    text: 'Anda menutup halaman pembayaran!'
+                                });
+                            }
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: response.message || 'Failed to checkout. Please try again.'
+                            text: response.message || 'Gagal melakukan checkout. Silakan coba lagi.'
                         });
                     }
                 },
@@ -224,7 +254,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Failed to process checkout. Please try again.'
+                        text: 'Gagal memproses checkout. Silakan coba lagi.'
                     });
                 }
             });
@@ -255,8 +285,6 @@
                 }
             });
         }
-
-
 
         function formatCurrency(amount) {
             return new Intl.NumberFormat('id-ID', {

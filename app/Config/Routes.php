@@ -65,6 +65,9 @@ $routes->group('mobile', ['namespace' => 'App\Controllers\Mobile'], function ($r
     $routes->post('gemma/processRequest', 'Gemma::processRequest');
     $routes->get('gemma/resetChat', 'Gemma::resetChat');
     $routes->presenter('reservation');
+    $routes->post('reservation/checkout', 'Reservation::checkout');
+    $routes->post('reservation/notification', 'Reservation::notification');
+    $routes->get('reservation/paymentSuccess', 'Reservation::paymentSuccess');
 });
 // App
 $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes) {
