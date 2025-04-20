@@ -51,6 +51,24 @@ $routes->group('upload', ['namespace' => 'App\Controllers\Web'], function ($rout
     $routes->delete('video', 'Upload::remove');
 });
 
+// mobile
+
+$routes->group('mobile', ['namespace' => 'App\Controllers\Mobile'], function ($routes) {
+    $routes->get('rumahGadang/maps', 'RumahGadang::maps');
+    $routes->get('rumahGadang/(:segment)', 'RumahGadang::detail/$1');
+
+    $routes->get('package/', 'Package::index');
+    $routes->get('package/(:segment)', 'Package::show/$1');
+    $routes->get('package/maps/(:segment)', 'Package::maps/$1');
+
+    $routes->get('gemma/', 'Gemma::index');
+    $routes->post('gemma/processRequest', 'Gemma::processRequest');
+    $routes->get('gemma/resetChat', 'Gemma::resetChat');
+    $routes->presenter('reservation');
+    $routes->post('reservation/checkout', 'Reservation::checkout');
+    $routes->post('reservation/notification', 'Reservation::notification');
+    $routes->get('reservation/paymentSuccess', 'Reservation::paymentSuccess');
+});
 // App
 $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes) {
     $routes->get('homeStay/', 'RumahGadang::index2');
@@ -58,14 +76,13 @@ $routes->group('web', ['namespace' => 'App\Controllers\Web'], function ($routes)
     $routes->get('gemma/', 'Gemma::index');
     $routes->post('gemma/ask', 'Gemma::ask');
 
-    $routes->get('rumahGadang/maps', 'RumahGadang::maps');
-    $routes->get('rumahGadang/detail/(:segment)', 'RumahGadang::detail/$1');
+
     $routes->presenter('rumahGadang');
     $routes->get('/', 'RumahGadang::recommendation');
     $routes->get('event/maps', 'Event::maps');
     $routes->get('event/detail/(:segment)', 'Event::detail/$1');
     $routes->presenter('event');
-    $routes->get('package/maps/(:segment)', 'Package::maps/$1');
+
     $routes->get('package/detail/(:segment)', 'Package::detail/$1');
     $routes->get('package/costum/new', 'Package::newCostum/$1');
     $routes->post('package/costum/saveCostum', 'Package::saveCostum');
