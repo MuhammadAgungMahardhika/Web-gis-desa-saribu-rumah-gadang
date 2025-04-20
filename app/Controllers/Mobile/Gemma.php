@@ -331,17 +331,21 @@ class Gemma extends ResourcePresenter
                 // Jika rumahGadangId tidak ada, cari berdasarkan nama paket
                 if (empty($arguments['rumahGadangId']) && !empty($arguments['rumahGadangOrHomestayName'])) {
                     $rumahGadangOrHomestayName = $arguments['rumahGadangOrHomestayName'];
-                    $rumahGadang = $this->modelRumahGadang
-                        ->where('id_homestay IS NOT NULL', null, false)
-                        ->where("SOUNDEX(name)", soundex($rumahGadangOrHomestayName))
-                        ->orLike("name", $rumahGadangOrHomestayName, 'both')
-                        ->first();
-                    if (!$rumahGadang || empty($rumahGadang['id_homestay'])) {
 
+                    $rumahGadang = $this->modelRumahGadang
+                        ->where('id_homestay IS NOT NULL', null, false)  // hanya yang punya homestay
+                        ->groupStart()  // mulai grouping kondisi pencarian
+                        ->where("SOUNDEX(name)", soundex($rumahGadangOrHomestayName))  // pencarian suara mirip
+                        ->orLike("name", $rumahGadangOrHomestayName, 'both')           // pencarian teks mirip
+                        ->groupEnd()    // akhiri grouping
+                        ->first();
+
+                    if (!$rumahGadang || empty($rumahGadang['id_homestay'])) {
                         return $this->response->setJSON([
                             "response" => "Homestay '{$rumahGadangOrHomestayName}' tidak ditemukan."
                         ]);
                     }
+
                     $arguments['rumahGadangId'] = $rumahGadang['id'];
                 }
                 // Pastikan semua parameter yang diperlukan ada
