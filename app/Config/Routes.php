@@ -226,7 +226,6 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
     $routes->post('reservation', 'Reservation:create');
     $routes->post('village', 'Village::getData');
     $routes->post('login', 'Profile::attemptLogin');
-    $routes->get('login', 'Profile::attemptLogin');
     $routes->post('profile', 'Profile::profile');
     $routes->get('logout', 'Profile::logout');
 });
