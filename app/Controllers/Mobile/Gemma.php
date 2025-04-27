@@ -155,9 +155,10 @@ class Gemma extends ResourcePresenter
                 
                 Pengguna: 'Untuk 4 orang, tanggal 15 Mei'
                 Anda: [Jalankan fungsi makePackageReservationAi dengan parameter yang sesuai]"
-                    ]
-                ],
-                $history
+
+                    ],
+                    $history
+                ]
             );
             $tools = [
                 [
