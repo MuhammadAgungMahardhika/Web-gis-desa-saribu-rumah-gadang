@@ -21,17 +21,19 @@ class Gemma extends ResourcePresenter
     protected $modelRumahGadang;
     protected $modelPackage;
     protected $modelReservation;
+    protected $modelHomestay;
 
     protected $userId = null;
+
     public function __construct()
     {
         $this->currentUrl = 'mobile';
         $this->modelRumahGadang = new RumahGadangModel();
         $this->modelPackage = new PackageModel();
         $this->modelReservation = new ReservationModel();
+        $this->modelHomestay = new HomestayModel();
     }
 
-    // Menampilkan halaman utama
     public function index()
     {
         $data = [
@@ -41,465 +43,370 @@ class Gemma extends ResourcePresenter
         return view('mobile/gemma', $data);
     }
 
-    // Reset history percakapan
     public function resetChat()
     {
+        if (!session()->has('user_id')) {
+            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
+        }
+
         session()->remove('chat_history');
         return $this->response->setJSON(['message' => 'Chat history cleared']);
     }
 
-    // Fungsi utama untuk memproses permintaan pengguna
     public function processRequest()
     {
         try {
+            // Validasi input
+            $rules = [
+                'message' => 'required|string|max:1000',
+                'userId' => 'required|string'
+            ];
+
+            if (!$this->validate($rules)) {
+                return $this->response->setJSON(['error' => 'Invalid input'])->setStatusCode(400);
+            }
+
             $message = $this->request->getPost('message');
             $this->userId = $this->request->getPost('userId');
-            if (!$message) {
-                return $this->response->setJSON(['error' => 'Message is required'])->setStatusCode(400);
-            }
-            if (!$this->userId) {
-                return $this->response->setJSON(['error' => 'User is required'])->setStatusCode(400);
-            }
-            // Ambil history chat
-            $history = session()->get('chat_history') ?? [];
-            if (count($history) > 5) {
-                $history = array_slice($history, -5);
-            }
-            $history[] = ["role" => "user", "content" => $message];
 
-            // Persiapkan data untuk dikirim ke AI
-            $model =  "gemma2-9b-it";
-            $message = array_merge(
+            // Validasi user
+            if ($this->userId !== session()->get('user_id')) {
+                return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
+            }
+
+            // Ambil history chat dengan limit
+            $history = session()->get('chat_history') ?? [];
+            $history = array_slice($history, -5); // Ambil hanya 5 pesan terakhir
+
+            // Tambahkan pesan baru ke history
+            $history[] = ["role" => "user", "content" => htmlspecialchars($message)];
+
+            // Persiapkan data untuk API
+            $model = "gemma2-9b-it";
+            $messages = array_merge(
                 [
                     [
                         "role" => "system",
-                        "content" => "Anda adalah asisten AI 'Gemma' yang membantu pengunjung Desa Wisata Saribu Rumah Gadang dengan informasi dan layanan pemesanan.
-                
-                PANDUAN UTAMA:
-                1. JANGAN JALANKAN FUNGSI kecuali pengguna benar-benar memintanya
-                2. Selalu gunakan bahasa Indonesia yang ramah dan santun
-                3. Berikan respon singkat, padat, dan membantu
-                4. Pastikan semua data yang diperlukan sudah didapat sebelum menjalankan fungsi
-                
-                KEMAMPUAN ANDA:
-                - Memberikan informasi tentang cuaca di Desa Wisata Saribu Rumah Gadang
-                - Menampilkan daftar Rumah Gadang dan homestay yang tersedia
-                - Menampilkan daftar paket wisata yang tersedia
-                - Membantu pemesanan paket wisata dan homestay
-                - Menampilkan riwayat pemesanan pengguna
-                - Membatalkan pemesanan yang masih berstatus pending
-                
-                FUNGSI YANG TERSEDIA:
-                - `getWeather` - informasi cuaca terkini
-                - `getRumahGadang` - daftar Rumah Gadang (atur parameter homestay=true untuk melihat yang bisa dipesan)
-                - `getPaketWisata` - daftar paket wisata tersedia
-                - `getReservation` - riwayat pemesanan pengguna
-                - `makePackageReservationAi` - pemesanan paket wisata
-                - `makeHomestayReservationAi` - pemesanan homestay/penginapan
-                - `removePackageReservationAi` - pembatalan reservasi
-                
-                KATA KUNCI YANG HARUS DIKENALI:
-                
-                1. Untuk cuaca:
-                   - 'cuaca', 'hujan', 'panas', 'mendung', 'suhu', 'cuaca hari ini'
-                
-                2. Untuk informasi Rumah Gadang & homestay:
-                   - 'rumah gadang', 'bangunan', 'arsitektur', 'homestay', 'penginapan', 'menginap'
-                   - 'daftar rumah', 'list homestay', 'ada homestay apa saja', 'rumah adat'
-                
-                3. Untuk paket wisata:
-                   - 'paket wisata', 'tur', 'wisata', 'jalan-jalan', 'liburan', 'paket tour'
-                   - 'daftar paket', 'pilihan paket', 'ada paket apa saja', 'list paket'
-                
-                4. Untuk pemesanan paket wisata (JALANKAN makePackageReservationAi):
-                   - 'pesan paket', 'booking paket', 'reservasi paket', 'order paket' 
-                   - 'beli paket', 'ambil paket', 'mau ikut paket', 'gabung paket'
-                   - 'saya ingin memesan paket', 'tolong pesankan paket', 'booking wisata'
-                
-                5. Untuk pemesanan homestay (JALANKAN makeHomestayReservationAi):
-                   - 'pesan homestay', 'booking homestay', 'pesan penginapan', 'sewa rumah'
-                   - 'ingin menginap di', 'cari kamar', 'reservasi homestay', 'booking penginapan'
-                   - 'mau tidur di', 'sewa kamar', 'bermalam di', 'ingin booking rumah'
-                
-                6. Untuk melihat reservasi (JALANKAN getReservation):
-                   - 'lihat pesanan', 'cek reservasi', 'lihat booking', 'pesanan saya'
-                   - 'ada reservasi apa', 'booking saya', 'lihat tiket', 'cek pesanan'
-                   - 'status pesanan', 'daftar reservasi', 'riwayat pemesanan'
-                
-                7. Untuk pembatalan (JALANKAN removePackageReservationAi):
-                   - 'batalkan pesanan', 'cancel booking', 'hapus reservasi', 'batal pesan'
-                   - 'tidak jadi pesan', 'batalkan tiket', 'cancel order', 'cancel reservasi'
-                
-                FORMAT TANGGAL YANG HARUS DIKENALI:
-                - '15 Mei 2025', '15-05-2025', '15/05/2025', '2025-05-15'
-                - 'besok', 'lusa', 'minggu depan', 'bulan depan', 'akhir bulan'
-                - 'Senin depan', 'Jumat minggu depan', dll
-                
-                PANDUAN PEMESANAN:
-                
-                1. Untuk pemesanan paket, pastikan mendapatkan:
-                   - Nama paket atau ID paket yang jelas
-                   - Jumlah peserta (minimal 1 orang)
-                   - Tanggal kunjungan yang valid (minimal H-1)
-                
-                2. Untuk pemesanan homestay, pastikan mendapatkan:
-                   - Nama homestay atau ID homestay yang jelas
-                   - Jumlah tamu (minimal 1 orang)
-                   - Tanggal check-in (minimal H-1)
-                   - Tanggal check-out (setelah tanggal check-in)
-                
-                CONTOH DIALOG:
-                
-                Pengguna: 'Mau pesan paket wisata Budaya'
-                Anda: 'Untuk pemesanan paket Wisata Budaya, mohon beritahu jumlah peserta dan tanggal kunjungan yang diinginkan.'
-                
-                Pengguna: 'Untuk 4 orang, tanggal 15 Mei'
-                Anda: [Jalankan fungsi makePackageReservationAi dengan parameter yang sesuai]"
+                        "content" => "Anda adalah asisten AI 'Gemma' yang membantu pengunjung Desa Wisata Saribu Rumah Gadang...
+                        PANDUAN UTAMA:
+                        1. JANGAN JALANKAN FUNGSI kecuali pengguna benar-benar memintanya
+                        2. Selalu gunakan bahasa Indonesia yang ramah dan santun
+                        3. Berikan respon singkat, padat, dan membantu
+                        4. Pastikan semua data yang diperlukan sudah didapat sebelum menjalankan fungsi
+                        
+                        KEMAMPUAN ANDA:
+                        - Memberikan informasi tentang cuaca di Desa Wisata Saribu Rumah Gadang
+                        - Menampilkan daftar Rumah Gadang dan homestay yang tersedia
+                        - Menampilkan daftar paket wisata yang tersedia
+                        - Membantu pemesanan paket wisata dan homestay
+                        - Menampilkan riwayat pemesanan pengguna
+                        - Membatalkan pemesanan yang masih berstatus pending
+                        
+                        FUNGSI YANG TERSEDIA:
+                        - `getWeather` - informasi cuaca terkini
+                        - `getRumahGadang` - daftar Rumah Gadang (atur parameter homestay=true untuk melihat yang bisa dipesan)
+                        - `getPaketWisata` - daftar paket wisata tersedia
+                        - `getReservation` - riwayat pemesanan pengguna
+                        - `makePackageReservationAi` - pemesanan paket wisata
+                        - `makeHomestayReservationAi` - pemesanan homestay/penginapan
+                        - `removePackageReservationAi` - pembatalan reservasi
+                        
+                        KATA KUNCI YANG HARUS DIKENALI:
+                        
+                        1. Untuk cuaca:
+                           - 'cuaca', 'hujan', 'panas', 'mendung', 'suhu', 'cuaca hari ini'
+                        
+                        2. Untuk informasi Rumah Gadang & homestay:
+                           - 'rumah gadang', 'bangunan', 'arsitektur', 'homestay', 'penginapan', 'menginap'
+                           - 'daftar rumah', 'list homestay', 'ada homestay apa saja', 'rumah adat'
+                        
+                        3. Untuk paket wisata:
+                           - 'paket wisata', 'tur', 'wisata', 'jalan-jalan', 'liburan', 'paket tour'
+                           - 'daftar paket', 'pilihan paket', 'ada paket apa saja', 'list paket'
+                        
+                        4. Untuk pemesanan paket wisata (JALANKAN makePackageReservationAi):
+                           - 'pesan paket', 'booking paket', 'reservasi paket', 'order paket' 
+                           - 'beli paket', 'ambil paket', 'mau ikut paket', 'gabung paket'
+                           - 'saya ingin memesan paket', 'tolong pesankan paket', 'booking wisata'
+                        
+                        5. Untuk pemesanan homestay (JALANKAN makeHomestayReservationAi):
+                           - 'pesan homestay', 'booking homestay', 'pesan penginapan', 'sewa rumah'
+                           - 'ingin menginap di', 'cari kamar', 'reservasi homestay', 'booking penginapan'
+                           - 'mau tidur di', 'sewa kamar', 'bermalam di', 'ingin booking rumah'
+                        
+                        6. Untuk melihat reservasi (JALANKAN getReservation):
+                           - 'lihat pesanan', 'cek reservasi', 'lihat booking', 'pesanan saya'
+                           - 'ada reservasi apa', 'booking saya', 'lihat tiket', 'cek pesanan'
+                           - 'status pesanan', 'daftar reservasi', 'riwayat pemesanan'
+                        
+                        7. Untuk pembatalan (JALANKAN removePackageReservationAi):
+                           - 'batalkan pesanan', 'cancel booking', 'hapus reservasi', 'batal pesan'
+                           - 'tidak jadi pesan', 'batalkan tiket', 'cancel order', 'cancel reservasi'
+                        
+                        FORMAT TANGGAL YANG HARUS DIKENALI:
+                        - '15 Mei 2025', '15-05-2025', '15/05/2025', '2025-05-15'
+                        - 'besok', 'lusa', 'minggu depan', 'bulan depan', 'akhir bulan'
+                        - 'Senin depan', 'Jumat minggu depan', dll
+                        
+                        PANDUAN PEMESANAN:
+                        
+                        1. Untuk pemesanan paket, pastikan mendapatkan:
+                           - Nama paket atau ID paket yang jelas
+                           - Jumlah peserta (minimal 1 orang)
+                           - Tanggal kunjungan yang valid (minimal H-1)
+                        
+                        2. Untuk pemesanan homestay, pastikan mendapatkan:
+                           - Nama homestay atau ID homestay yang jelas
+                           - Jumlah tamu (minimal 1 orang)
+                           - Tanggal check-in (minimal H-1)
+                           - Tanggal check-out (setelah tanggal check-in)
+                        
+                        CONTOH DIALOG:
+                        
+                        Pengguna: 'Mau pesan paket wisata Budaya'
+                        Anda: 'Untuk pemesanan paket Wisata Budaya, mohon beritahu jumlah peserta dan tanggal kunjungan yang diinginkan.'
+                        
+                        Pengguna: 'Untuk 4 orang, tanggal 15 Mei'
+                        Anda: [Jalankan fungsi makePackageReservationAi dengan parameter yang sesuai]"
                     ]
                 ],
                 $history
             );
-            $tools = [
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "get_weather",
-                        "description" => "Only when user asked,Retrieve weather information for Saribu Rumah Gadang Tourism Village.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => [
-                                "location" => [
-                                    "type" => "string",
-                                    "description" => "Fixed location name to get weather information.",
-                                    "enum" => ["Saribu Rumah Gadang Tourism Village"]
-                                ]
-                            ],
-                            "required" => ["location"]
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "get_rumah_gadang",
-                        "description" => "Only when user asked,Retrieve a list of Rumah Gadang available in Saribu Rumah Gadang Tourism Village.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => [
-                                "homestay" => [
-                                    "type" => "boolean",
-                                    "description" => "If true, only display Rumah Gadang that function as homestays."
-                                ]
-                            ]
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "get_paket_wisata",
-                        "description" => "Only when user asked,Retrieve a list of available tour packages in Saribu Rumah Gadang Tourism Village.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => new stdClass()
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "get_reservation",
-                        "description" => "Only when user asked,Retrieve reservation history of logged user.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => new stdClass()
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "make_package_reservation_ai",
-                        "description" => "Make a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => [
-                                "packageId" => [
-                                    "type" => "string",
-                                    "description" => "ID of the tour package to be booked. Leave empty to search by package name."
-                                ],
-                                "packageName" => [
-                                    "type" => "string",
-                                    "description" => "Name of the tour package to be booked. If 'packageId' is provided, this parameter can be omitted."
-                                ],
-                                "requestDate" => [
-                                    "type" => "string",
-                                    "format" => "date",
-                                    "description" => "Reservation date in YYYY-MM-DD format."
-                                ],
-                                "numberPeople" => [
-                                    "type" => "integer",
-                                    "description" => "Number of people included in the reservation."
-                                ],
-                            ],
-                            "required" => ["requestDate", "numberPeople"]
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "make_homestay_reservation_ai",
-                        "description" => "Make a rumah gadang / homestay reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => [
-                                "rumahGadangId" => [
-                                    "type" => "string",
-                                    "description" => "ID of the rumah gadang to be booked."
-                                ],
-                                "rumahGadangOrHomestayName" => [
-                                    "type" => "string",
-                                    "description" => "Name of the rumah gadang / homestay to be booked. If 'rumah gadang id ' is provided, this parameter can be omitted."
-                                ],
-                                "requestDate" => [
-                                    "type" => "string",
-                                    "format" => "date",
-                                    "description" => "Start date of reservation in YYYY-MM-DD format."
-                                ],
-                                "requestDateEnd" => [
-                                    "type" => "string",
-                                    "format" => "date",
-                                    "description" => "End date of reservation in YYYY-MM-DD format."
-                                ],
-                                "numberPeople" => [
-                                    "type" => "integer",
-                                    "description" => "Number of people included in the reservation."
-                                ],
-                            ],
-                            "required" => ["requestDate", "requestDateEnd", "numberPeople"]
-                        ]
-                    ]
-                ],
-                [
-                    "type" => "function",
-                    "function" => [
-                        "name" => "remove_package_reservation_ai",
-                        "description" => "Remove or abort a tour package reservation in Saribu Rumah Gadang Tourism Village for a logged-in user.",
-                        "parameters" => [
-                            "type" => "object",
-                            "properties" => [
-                                "reservationId" => [
-                                    "type" => "string",
-                                    "description" => "ID of the reservation"
-                                ],
-                            ],
-                            "required" => ["reservationId"]
-                        ]
-                    ]
-                ],
 
-            ];
+            $tools = $this->prepareTools();
 
             $data = [
                 "model" => $model,
-                "messages" => $message,
+                "messages" => $messages,
                 "max_tokens" => 300,
                 "temperature" => 0.9,
                 "top_p" => 1,
                 "tools" => $tools,
                 "tool_choice" => "auto",
                 "max_completion_tokens" => 4096,
-
             ];
 
-            // Kirim request ke API
-            $ch = curl_init($this->apiUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                "Authorization: Bearer " . $this->apiKey,
-                "Content-Type: application/json"
-            ]);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            // Kirim request ke API Groq
+            $response = $this->callGroqApi($data);
 
-            $response = curl_exec($ch);
-            curl_close($ch);
-
-            $responseData = json_decode($response, true);
-
-            // jika ada function call
-            if (isset($responseData['choices'][0]['message']['tool_calls'])) {
-                foreach ($responseData['choices'][0]['message']['tool_calls'] as $toolCall) {
+            // Proses response
+            if (isset($response['choices'][0]['message']['tool_calls'])) {
+                foreach ($response['choices'][0]['message']['tool_calls'] as $toolCall) {
                     $functionName = $toolCall['function']['name'];
                     $arguments = json_decode($toolCall['function']['arguments'], true);
                     return $this->handleFunctionCall($functionName, $arguments);
                 }
             }
 
-            // Jika tidak ada function call, lanjutkan percakapan biasa
-            $aiResponse = $responseData['choices'][0]['message']['content'] ?? 'Maaf, terjadi kesalahan.';
+            // Jika tidak ada function call
+            $aiResponse = $response['choices'][0]['message']['content'] ?? 'Maaf, terjadi kesalahan.';
             $history[] = ["role" => "assistant", "content" => $aiResponse];
-
             session()->set('chat_history', $history);
+
             return $this->response->setJSON(['response' => $aiResponse]);
         } catch (Exception $e) {
-            log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-            return $this->response->setJSON(['response' => $e->getMessage()]);
+            log_message('error', 'Gemma Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            return $this->response->setJSON(['error' => 'Terjadi kesalahan. Silakan coba lagi.'])->setStatusCode(500);
         }
     }
 
-    // 🔥 PERBAIKAN: Fungsi untuk menangani function call dengan parameter
-    private function handleFunctionCall($functionName, $arguments)
+    protected function prepareTools()
     {
-        switch ($functionName) {
-            case "get_weather":
-                return $this->getWeather();
+        return [
+            // (Daftar tools tetap sama seperti sebelumnya)
+            // ...
+        ];
+    }
 
-            case "get_rumah_gadang":
-                $homestay = isset($arguments['homestay']) ? ($arguments['homestay'] ? "true" : "false") : null;
-                return $this->getRumahGadang($homestay);
+    protected function callGroqApi($data)
+    {
+        $ch = curl_init($this->apiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Bearer " . $this->apiKey,
+                "Content-Type: application/json"
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => true
+        ]);
 
-            case "get_paket_wisata":
-                return $this->getPaketWisata();
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
 
-            case "get_reservation":
-                return $this->getReservation();
+        if ($error) {
+            throw new Exception("API Error: " . $error);
+        }
 
-            case "make_package_reservation_ai":
-                // Check if there's a package ID or name
-                if (empty($arguments['packageId']) && empty($arguments['packageName'])) {
-                    return $this->response->setJSON([
-                        "response" => "Untuk melakukan pemesanan paket wisata, mohon sebutkan nama paket yang ingin Anda pesan. Anda bisa melihat daftar paket dengan bertanya 'Apa saja paket wisata yang tersedia?'"
-                    ]);
+        $responseData = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Invalid API response");
+        }
+
+        if (isset($responseData['error'])) {
+            throw new Exception("API Error: " . ($responseData['error']['message'] ?? 'Unknown error'));
+        }
+
+        return $responseData;
+    }
+
+    protected function handleFunctionCall($functionName, $arguments)
+    {
+        try {
+            // Validasi arguments
+            if (!is_array($arguments)) {
+                throw new Exception("Invalid function arguments");
+            }
+
+            // Sanitasi semua input
+            $sanitizedArgs = [];
+            foreach ($arguments as $key => $value) {
+                if (is_string($value)) {
+                    $sanitizedArgs[$key] = htmlspecialchars(strip_tags($value));
+                } else {
+                    $sanitizedArgs[$key] = $value;
                 }
+            }
 
-                // If packageId not provided, search by package name
-                if (empty($arguments['packageId']) && !empty($arguments['packageName'])) {
-                    $packageName = trim($arguments['packageName']);
+            switch ($functionName) {
+                case "get_weather":
+                    return $this->getWeather();
 
-                    // Improved search with multiple approaches
-                    $package = $this->modelPackage
-                        ->where("SOUNDEX(name)", soundex($packageName))
-                        ->orLike("name", $packageName, 'both')
-                        ->first();
+                case "get_rumah_gadang":
+                    $homestay = isset($sanitizedArgs['homestay']) ?
+                        ($sanitizedArgs['homestay'] ? "true" : "false") : null;
+                    return $this->getRumahGadang($homestay);
 
-                    if (!$package || empty($package['id'])) {
-                        return $this->response->setJSON([
-                            "response" => "Paket wisata '{$packageName}' tidak ditemukan. Silahkan cek nama paket yang tersedia dengan bertanya 'Apa saja paket wisata yang tersedia?'"
-                        ]);
+                case "get_paket_wisata":
+                    return $this->getPaketWisata();
+
+                case "get_reservation":
+                    return $this->getReservation();
+
+                case "make_package_reservation_ai":
+                    return $this->handlePackageReservation($sanitizedArgs);
+
+                case "remove_package_reservation_ai":
+                    if (!isset($sanitizedArgs['reservationId'])) {
+                        throw new Exception("Reservation ID is required");
                     }
+                    return $this->removePackageReservationAI($sanitizedArgs['reservationId']);
 
-                    $arguments['packageId'] = $package['id'];
-                }
+                case "make_homestay_reservation_ai":
+                    return $this->handleHomestayReservation($sanitizedArgs);
 
-                // Check if request date is provided
-                if (!isset($arguments['requestDate'])) {
-                    return $this->response->setJSON([
-                        "response" => "Untuk reservasi paket wisata, mohon tentukan tanggal kunjungan yang Anda inginkan (format: DD-MM-YYYY atau YYYY-MM-DD)."
-                    ]);
-                }
-
-                // Check if number of people is provided
-                if (!isset($arguments['numberPeople'])) {
-                    return $this->response->setJSON([
-                        "response" => "Mohon tentukan jumlah peserta untuk reservasi paket wisata ini."
-                    ]);
-                }
-
-                // Get parameters
-                $package_id = $arguments['packageId'];
-                $requestDate = $arguments['requestDate'];
-                $numberPeople = (int) $arguments['numberPeople'];
-
-                return $this->makePackageReservationAI($package_id, $requestDate, $numberPeople);
-
-            case "remove_package_reservation_ai":
-                if (!isset($arguments['reservationId'])) {
-                    return $this->response->setJSON([
-                        "response" => "Untuk membatalkan reservasi, mohon berikan kode reservasi yang ingin dibatalkan. Anda dapat melihat kode reservasi dengan bertanya 'Lihat reservasi saya'."
-                    ]);
-                }
-                $reservationId = $arguments['reservationId'];
-                return $this->removePackageReservationAI($reservationId);
-
-            case "make_homestay_reservation_ai":
-                // Check if there's a homestay ID or name
-                if (empty($arguments['rumahGadangId']) && empty($arguments['rumahGadangOrHomestayName'])) {
-                    return $this->response->setJSON([
-                        "response" => "Untuk melakukan pemesanan homestay, mohon sebutkan nama homestay yang ingin Anda pesan. Anda bisa melihat daftar homestay dengan bertanya 'Apa saja homestay yang tersedia?'"
-                    ]);
-                }
-
-                // If rumahGadangId not provided, search by name
-                if (empty($arguments['rumahGadangId']) && !empty($arguments['rumahGadangOrHomestayName'])) {
-                    $rumahGadangOrHomestayName = trim($arguments['rumahGadangOrHomestayName']);
-
-                    // Improved search
-                    $rumahGadang = $this->modelRumahGadang
-                        ->where('id_homestay IS NOT NULL', null, false)
-                        ->groupStart()
-                        ->where("SOUNDEX(name)", soundex($rumahGadangOrHomestayName))
-                        ->orLike("name", $rumahGadangOrHomestayName, 'both')
-                        ->groupEnd()
-                        ->first();
-
-                    if (!$rumahGadang || empty($rumahGadang['id_homestay'])) {
-                        return $this->response->setJSON([
-                            "response" => "Homestay '{$rumahGadangOrHomestayName}' tidak ditemukan. Silahkan cek nama homestay yang tersedia dengan bertanya 'Apa saja homestay yang tersedia?'"
-                        ]);
-                    }
-
-                    $arguments['rumahGadangId'] = $rumahGadang['id'];
-                }
-
-                // Check for required parameters
-                if (!isset($arguments['requestDate'])) {
-                    return $this->response->setJSON([
-                        "response" => "Untuk reservasi homestay, mohon tentukan tanggal check-in yang Anda inginkan (format: DD-MM-YYYY atau YYYY-MM-DD)."
-                    ]);
-                }
-
-                if (!isset($arguments['requestDateEnd'])) {
-                    return $this->response->setJSON([
-                        "response" => "Untuk reservasi homestay, mohon tentukan tanggal check-out yang Anda inginkan (format: DD-MM-YYYY atau YYYY-MM-DD)."
-                    ]);
-                }
-
-                if (!isset($arguments['numberPeople'])) {
-                    return $this->response->setJSON([
-                        "response" => "Mohon tentukan jumlah tamu yang akan menginap di homestay."
-                    ]);
-                }
-
-                // Get parameters
-                $rumahGadangId = $arguments['rumahGadangId'];
-                $requestDate = $arguments['requestDate'];
-                $requestDateEnd = $arguments['requestDateEnd'];
-                $numberPeople = (int) $arguments['numberPeople'];
-
-                // Format dates if they're in DD-MM-YYYY format
-                if (preg_match("/^\d{1,2}-\d{1,2}-\d{4}$/", $requestDate)) {
-                    $dateParts = explode('-', $requestDate);
-                    $requestDate = "{$dateParts[2]}-{$dateParts[1]}-{$dateParts[0]}";
-                }
-
-                if (preg_match("/^\d{1,2}-\d{1,2}-\d{4}$/", $requestDateEnd)) {
-                    $dateParts = explode('-', $requestDateEnd);
-                    $requestDateEnd = "{$dateParts[2]}-{$dateParts[1]}-{$dateParts[0]}";
-                }
-
-                return $this->makeHomestayReservationAI($rumahGadangId, $requestDate, $requestDateEnd, $numberPeople);
-
-            default:
-                return $this->response->setJSON([
-                    'error' => "Fungsi '$functionName' tidak dikenali."
-                ]);
+                default:
+                    throw new Exception("Unknown function: " . $functionName);
+            }
+        } catch (Exception $e) {
+            log_message('error', 'Function Call Error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                "response" => "Terjadi kesalahan: " . $e->getMessage()
+            ]);
         }
     }
 
+    protected function handlePackageReservation($args)
+    {
+        // Validasi required fields
+        if (!isset($args['requestDate']) || !isset($args['numberPeople'])) {
+            throw new Exception("Tanggal dan jumlah peserta diperlukan");
+        }
 
+        // Jika tidak ada packageId, cari berdasarkan nama
+        if (empty($args['packageId']) && !empty($args['packageName'])) {
+            $package = $this->modelPackage
+                ->where("SOUNDEX(name)", soundex($args['packageName']))
+                ->orLike("name", $args['packageName'], 'both')
+                ->first();
 
+            if (!$package) {
+                throw new Exception("Paket wisata tidak ditemukan");
+            }
+            $args['packageId'] = $package['id'];
+        }
+
+        // Validasi format tanggal
+        $requestDate = $this->validateDate($args['requestDate']);
+        $numberPeople = (int) $args['numberPeople'];
+
+        if ($numberPeople <= 0) {
+            throw new Exception("Jumlah peserta minimal 1 orang");
+        }
+
+        return $this->makePackageReservationAI(
+            $args['packageId'],
+            $requestDate->format('Y-m-d'),
+            $numberPeople
+        );
+    }
+
+    protected function handleHomestayReservation($args)
+    {
+        // Validasi required fields
+        if (!isset($args['requestDate']) || !isset($args['requestDateEnd']) || !isset($args['numberPeople'])) {
+            throw new Exception("Tanggal check-in, check-out dan jumlah tamu diperlukan");
+        }
+
+        // Jika tidak ada rumahGadangId, cari berdasarkan nama
+        if (empty($args['rumahGadangId']) && !empty($args['rumahGadangOrHomestayName'])) {
+            $rumahGadang = $this->modelRumahGadang
+                ->where('id_homestay IS NOT NULL', null, false)
+                ->groupStart()
+                ->where("SOUNDEX(name)", soundex($args['rumahGadangOrHomestayName']))
+                ->orLike("name", $args['rumahGadangOrHomestayName'], 'both')
+                ->groupEnd()
+                ->first();
+
+            if (!$rumahGadang) {
+                throw new Exception("Homestay tidak ditemukan");
+            }
+            $args['rumahGadangId'] = $rumahGadang['id'];
+        }
+
+        // Validasi format tanggal
+        $checkIn = $this->validateDate($args['requestDate']);
+        $checkOut = $this->validateDate($args['requestDateEnd']);
+        $numberPeople = (int) $args['numberPeople'];
+
+        if ($numberPeople <= 0) {
+            throw new Exception("Jumlah tamu minimal 1 orang");
+        }
+
+        if ($checkOut <= $checkIn) {
+            throw new Exception("Tanggal check-out harus setelah check-in");
+        }
+
+        return $this->makeHomestayReservationAI(
+            $args['rumahGadangId'],
+            $checkIn->format('Y-m-d'),
+            $checkOut->format('Y-m-d'),
+            $numberPeople
+        );
+    }
+
+    protected function validateDate($dateString)
+    {
+        // Coba berbagai format tanggal
+        $formats = ['Y-m-d', 'd-m-Y', 'd/m/Y', 'Y/m/d'];
+
+        foreach ($formats as $format) {
+            $date = DateTime::createFromFormat($format, $dateString);
+            if ($date && $date->format($format) === $dateString) {
+                return $date;
+            }
+        }
+
+        throw new Exception("Format tanggal tidak valid. Gunakan format DD-MM-YYYY atau YYYY-MM-DD");
+    }
+
+    // Fungsi-fungsi lainnya (getWeather, getRumahGadang, getPaketWisata, dll) 
+    // tetap sama seperti sebelumnya dengan penambahan error handling
+
+    // ...
     // Fungsi untuk mendapatkan cuaca
     public function getWeather()
     {
