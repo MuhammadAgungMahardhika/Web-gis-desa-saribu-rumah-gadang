@@ -73,13 +73,88 @@ class Gemma extends ResourcePresenter
                 [
                     [
                         "role" => "system",
-                        "content" => "You are an AI providing information about the Saribu Rumah Gadang Tourism Village Application.
-                        Use the following functions as needed, do not run one of these if user not asking:
-                        - `getWeather` only if the user asks about the weather.
-                        - `getRumahGadang` only if the user asks about the list of Rumah Gadang.
-                        - `getPaketWisata` only if the user asks about tour packages.
-                        - `makePackageReservationAi` only if the user requests to book a specific tour package.
-                        - `makeHomestayReservationAi` only if the user requests to book a specific Rumah Gadang (homestay)."
+                        "content" => "Anda adalah asisten AI 'Gemma' yang membantu pengunjung Desa Wisata Saribu Rumah Gadang dengan informasi dan layanan pemesanan.
+                
+                PANDUAN UTAMA:
+                1. JANGAN JALANKAN FUNGSI kecuali pengguna benar-benar memintanya
+                2. Selalu gunakan bahasa Indonesia yang ramah dan santun
+                3. Berikan respon singkat, padat, dan membantu
+                4. Pastikan semua data yang diperlukan sudah didapat sebelum menjalankan fungsi
+                
+                KEMAMPUAN ANDA:
+                - Memberikan informasi tentang cuaca di Desa Wisata Saribu Rumah Gadang
+                - Menampilkan daftar Rumah Gadang dan homestay yang tersedia
+                - Menampilkan daftar paket wisata yang tersedia
+                - Membantu pemesanan paket wisata dan homestay
+                - Menampilkan riwayat pemesanan pengguna
+                - Membatalkan pemesanan yang masih berstatus pending
+                
+                FUNGSI YANG TERSEDIA:
+                - `getWeather` - informasi cuaca terkini
+                - `getRumahGadang` - daftar Rumah Gadang (atur parameter homestay=true untuk melihat yang bisa dipesan)
+                - `getPaketWisata` - daftar paket wisata tersedia
+                - `getReservation` - riwayat pemesanan pengguna
+                - `makePackageReservationAi` - pemesanan paket wisata
+                - `makeHomestayReservationAi` - pemesanan homestay/penginapan
+                - `removePackageReservationAi` - pembatalan reservasi
+                
+                KATA KUNCI YANG HARUS DIKENALI:
+                
+                1. Untuk cuaca:
+                   - 'cuaca', 'hujan', 'panas', 'mendung', 'suhu', 'cuaca hari ini'
+                
+                2. Untuk informasi Rumah Gadang & homestay:
+                   - 'rumah gadang', 'bangunan', 'arsitektur', 'homestay', 'penginapan', 'menginap'
+                   - 'daftar rumah', 'list homestay', 'ada homestay apa saja', 'rumah adat'
+                
+                3. Untuk paket wisata:
+                   - 'paket wisata', 'tur', 'wisata', 'jalan-jalan', 'liburan', 'paket tour'
+                   - 'daftar paket', 'pilihan paket', 'ada paket apa saja', 'list paket'
+                
+                4. Untuk pemesanan paket wisata (JALANKAN makePackageReservationAi):
+                   - 'pesan paket', 'booking paket', 'reservasi paket', 'order paket' 
+                   - 'beli paket', 'ambil paket', 'mau ikut paket', 'gabung paket'
+                   - 'saya ingin memesan paket', 'tolong pesankan paket', 'booking wisata'
+                
+                5. Untuk pemesanan homestay (JALANKAN makeHomestayReservationAi):
+                   - 'pesan homestay', 'booking homestay', 'pesan penginapan', 'sewa rumah'
+                   - 'ingin menginap di', 'cari kamar', 'reservasi homestay', 'booking penginapan'
+                   - 'mau tidur di', 'sewa kamar', 'bermalam di', 'ingin booking rumah'
+                
+                6. Untuk melihat reservasi (JALANKAN getReservation):
+                   - 'lihat pesanan', 'cek reservasi', 'lihat booking', 'pesanan saya'
+                   - 'ada reservasi apa', 'booking saya', 'lihat tiket', 'cek pesanan'
+                   - 'status pesanan', 'daftar reservasi', 'riwayat pemesanan'
+                
+                7. Untuk pembatalan (JALANKAN removePackageReservationAi):
+                   - 'batalkan pesanan', 'cancel booking', 'hapus reservasi', 'batal pesan'
+                   - 'tidak jadi pesan', 'batalkan tiket', 'cancel order', 'cancel reservasi'
+                
+                FORMAT TANGGAL YANG HARUS DIKENALI:
+                - '15 Mei 2025', '15-05-2025', '15/05/2025', '2025-05-15'
+                - 'besok', 'lusa', 'minggu depan', 'bulan depan', 'akhir bulan'
+                - 'Senin depan', 'Jumat minggu depan', dll
+                
+                PANDUAN PEMESANAN:
+                
+                1. Untuk pemesanan paket, pastikan mendapatkan:
+                   - Nama paket atau ID paket yang jelas
+                   - Jumlah peserta (minimal 1 orang)
+                   - Tanggal kunjungan yang valid (minimal H-1)
+                
+                2. Untuk pemesanan homestay, pastikan mendapatkan:
+                   - Nama homestay atau ID homestay yang jelas
+                   - Jumlah tamu (minimal 1 orang)
+                   - Tanggal check-in (minimal H-1)
+                   - Tanggal check-out (setelah tanggal check-in)
+                
+                CONTOH DIALOG:
+                
+                Pengguna: 'Mau pesan paket wisata Budaya'
+                Anda: 'Untuk pemesanan paket Wisata Budaya, mohon beritahu jumlah peserta dan tanggal kunjungan yang diinginkan.'
+                
+                Pengguna: 'Untuk 4 orang, tanggal 15 Mei'
+                Anda: [Jalankan fungsi makePackageReservationAi dengan parameter yang sesuai]"
                     ]
                 ],
                 $history
@@ -525,37 +600,49 @@ class Gemma extends ResourcePresenter
     }
 
     // 🔥 Fungsi untuk menangani reservasi AI utk paket
-    public function makePackageReservationAI($package_id,  $requestDate, $numberPeople)
+    public function makePackageReservationAI($package_id, $requestDate, $numberPeople)
     {
         try {
             if (!$this->userId) {
-                throw new Exception("Mohon login untuk memesan paket");
+                throw new Exception("Mohon login terlebih dahulu untuk memesan paket wisata");
             }
             $user_id = $this->userId;
+
+            // Format the date if it's in DD-MM-YYYY format
+            if (preg_match("/^\d{1,2}-\d{1,2}-\d{4}$/", $requestDate)) {
+                $dateParts = explode('-', $requestDate);
+                $requestDate = "{$dateParts[2]}-{$dateParts[1]}-{$dateParts[0]}";
+            }
 
             // Dapatkan data paket wisata
             $package = $this->modelPackage->find($package_id);
 
             if (!$package) {
-                throw new Exception("Paket wisata tidak ditemukan.");
+                throw new Exception("Paket wisata tidak ditemukan. Silahkan cek daftar paket yang tersedia.");
             }
 
             $capacity = $package['capacity'];
             $price = $package['price'];
 
-            // Cek apakah jumlah orang melebihi kapasitas
+            // Cek apakah jumlah orang valid
             if ($numberPeople <= 0) {
-                throw new Exception("Tentukan berapa orang yang ikut, Minimal 1 orang untuk reservasi.");
+                throw new Exception("Jumlah peserta harus minimal 1 orang.");
             }
 
             if ($numberPeople > $capacity) {
-                throw new Exception("Kapasitas maksimal paket adalah {$capacity} orang.");
+                throw new Exception("Jumlah peserta melebihi kapasitas maksimal. Kapasitas paket {$package['name']} adalah {$capacity} orang.");
+            }
+
+            // Validate date format
+            $dateObj = DateTime::createFromFormat('Y-m-d', $requestDate);
+            if (!$dateObj || $dateObj->format('Y-m-d') !== $requestDate) {
+                throw new Exception("Format tanggal tidak valid. Gunakan format YYYY-MM-DD (contoh: 2025-05-20).");
             }
 
             // Cek apakah tanggal reservasi valid (H-1 minimal)
             $today = date('Y-m-d');
             if ($requestDate <= $today) {
-                throw new Exception("Tanggal reservasi harus minimal H-1 dari hari ini.");
+                throw new Exception("Tanggal reservasi harus minimal H-1 dari hari ini. Silahkan pilih tanggal setelah {$today}.");
             }
 
             // Cek apakah user sudah reservasi di tanggal yang sama
@@ -566,30 +653,42 @@ class Gemma extends ResourcePresenter
                 ->first();
 
             if ($existingReservation) {
-                throw new Exception("Anda sudah reservasi untuk paket dan tanggal yang sama.");
+                throw new Exception("Anda sudah memiliki reservasi untuk paket {$package['name']} pada tanggal {$requestDate}.");
             }
 
             // Simpan reservasi baru
-            $id =  $this->modelReservation->get_new_id_api();
+            $id = $this->modelReservation->get_new_id_api();
+            $total_price = $numberPeople * $price;
             $reservationData = [
-                'id' =>  $id,
-                'id_user' =>  $user_id,
+                'id' => $id,
+                'id_user' => $user_id,
                 'id_package' => $package_id,
                 'request_date' => $requestDate,
                 'id_reservation_status' => 1, // pending status
                 'number_people' => $numberPeople,
-                'total_price' => $numberPeople * $price,
+                'total_price' => $total_price,
             ];
 
             $this->modelReservation->add_r_api($reservationData);
 
-            $reservationData = $this->modelReservation->find($id);
-            $reservationPeople = $reservationData['number_people'];
-            $reservationTotalPrice  =  number_format($reservationData['total_price'], 0, ',', '.');
-            return $this->response->setJSON(["response" => "<span class='text-success'>Reservasi berhasil dibuat.<br><b><u>{$reservationData['id']}-{$package['name']}-{$reservationPeople} orang - tanggal {$requestDate} - total harga {$reservationTotalPrice} </u></b>.</span><br> Silahkan melakukan pembayaran!"]);
+            // Format tanggal untuk response
+            $formattedDate = date('d F Y', strtotime($requestDate));
+            $totalPriceFormatted = number_format($total_price, 0, ',', '.');
+
+            return $this->response->setJSON([
+                "response" => "<span class='text-success'>✅ Reservasi berhasil dibuat!</span><br><br>" .
+                    "📋 <b>Detail Reservasi:</b><br>" .
+                    "🔖 Kode Booking: <b>{$id}</b><br>" .
+                    "🎫 Paket: <b>{$package['name']}</b><br>" .
+                    "👥 Jumlah Peserta: <b>{$numberPeople} orang</b><br>" .
+                    "📅 Tanggal: <b>{$formattedDate}</b><br>" .
+                    "💰 Total Harga: <b>Rp {$totalPriceFormatted}</b><br><br>" .
+                    "Silahkan lakukan pembayaran sesuai petunjuk yang akan dikirimkan ke email Anda.<br>" .
+                    "Untuk melihat reservasi Anda, ketik <b>'Lihat reservasi saya'</b>."
+            ]);
         } catch (Exception $e) {
             log_message('error', 'Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-            return $this->response->setJSON(["response" => $e->getMessage()]);
+            return $this->response->setJSON(["response" => "❌ " . $e->getMessage()]);
         }
     }
 
