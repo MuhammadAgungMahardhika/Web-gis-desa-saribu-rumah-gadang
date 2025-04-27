@@ -679,6 +679,107 @@ class Gemma extends ResourcePresenter
         }
     }
 
+    // Helper function to format reservation cards
+    private function formatReservationCard($reservation)
+    {
+        $reservationId = $reservation['id'];
+        $date = date('d F Y', strtotime($reservation['request_date']));
+        $endDate = !empty($reservation['request_date_end']) ? " - " . date('d F Y', strtotime($reservation['request_date_end'])) : "";
+        $totalPrice = number_format($reservation['total_price'], 0, ',', '.');
+        $numberPeople = $reservation['number_people'] ?? '-';
+
+        // Get status text and icon
+        $statusInfo = $this->getStatusInfo($reservation['id_reservation_status']);
+
+        // Determine if it's a package or homestay reservation
+        $type = !empty($reservation['id_package']) ? 'package' : 'homestay';
+        $typeIcon = ($type == 'package') ? '🎫' : '🏠';
+        $typeName = !empty($reservation['id_package']) ? 'Paket Wisata' : 'Homestay';
+        $itemId = !empty($reservation['id_package']) ? $reservation['id_package'] : $reservation['id_homestay'];
+
+        // Get item name (requires modification to your model)
+        $itemName = $this->getItemName($type, $itemId);
+
+        $card = "<div class='reservation-card mb-3 p-3' style='border: 1px solid #ddd; border-radius: 8px;'>";
+        $card .= "<div class='d-flex justify-content-between'>";
+        $card .= "<h5>{$typeIcon} {$typeName}: {$itemName}</h5>";
+        $card .= "<span class='{$statusInfo['class']}'>{$statusInfo['icon']} {$statusInfo['text']}</span>";
+        $card .= "</div>";
+        $card .= "<ul style='list-style-type: none; padding-left: 5px;'>";
+        $card .= "<li>🔖 <b>Kode:</b> {$reservationId}</li>";
+        $card .= "<li>📅 <b>Tanggal:</b> {$date}{$endDate}</li>";
+        $card .= "<li>👥 <b>Jumlah Orang:</b> {$numberPeople}</li>";
+        $card .= "<li>💰 <b>Total Harga:</b> Rp {$totalPrice}</li>";
+        $card .= "</ul>";
+        $card .= "</div>";
+
+        return $card;
+    }
+
+    private function getStatusInfo($statusId)
+    {
+        switch ($statusId) {
+            case 1:
+                return [
+                    'text' => 'Menunggu Konfirmasi',
+                    'icon' => '⏳',
+                    'class' => 'text-warning'
+                ];
+            case 2:
+                return [
+                    'text' => 'Terkonfirmasi',
+                    'icon' => '✅',
+                    'class' => 'text-success'
+                ];
+            case 3:
+                return [
+                    'text' => 'Dibatalkan',
+                    'icon' => '❌',
+                    'class' => 'text-danger'
+                ];
+            case 4:
+                return [
+                    'text' => 'Terbayar',
+                    'icon' => '💰',
+                    'class' => 'text-success'
+                ];
+            case 5:
+                return [
+                    'text' => 'Selesai',
+                    'icon' => '🏁',
+                    'class' => 'text-info'
+                ];
+            default:
+                return [
+                    'text' => 'Status Tidak Diketahui',
+                    'icon' => '❓',
+                    'class' => 'text-secondary'
+                ];
+        }
+    }
+    private function getItemName($type, $itemId)
+    {
+        try {
+            if ($type == 'package') {
+                $package = $this->modelPackage->find($itemId);
+                return $package ? $package['name'] : 'Paket tidak ditemukan';
+            } else {
+                // For homestay, we need to get the name from RumahGadang
+                $homestayModel = new \App\Models\HomestayModel();
+                $homestay = $homestayModel->find($itemId);
+
+                if ($homestay && !empty($homestay['id_rumah_gadang'])) {
+                    $rumahGadang = $this->modelRumahGadang->find($homestay['id_rumah_gadang']);
+                    return $rumahGadang ? $rumahGadang['name'] : 'Homestay tidak ditemukan';
+                }
+
+                return 'Homestay tidak ditemukan';
+            }
+        } catch (Exception $e) {
+            return 'Nama tidak tersedia';
+        }
+    }
+
     public function removePackageReservationAI($reservationId)
     {
         try {
