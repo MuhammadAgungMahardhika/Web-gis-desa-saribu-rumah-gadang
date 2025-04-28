@@ -111,9 +111,6 @@ class Profile extends ResourceController
     public function attemptLogin()
     {
 
-        $login = $this->request->getPost('login');
-        $password = $this->request->getPost('password');
-
         $rules = [
             'login'    => 'required',
             'password' => 'required',
@@ -134,7 +131,8 @@ class Profile extends ResourceController
             return $this->respond($response, 400);
         }
 
-
+        $login = $this->request->getPost('login');
+        $password = $this->request->getPost('password');
 
         // Determine credential type
         $type = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
@@ -169,6 +167,7 @@ class Profile extends ResourceController
         ];
         return $this->respond($response, 200);
     }
+
 
     public function profile()
     {
