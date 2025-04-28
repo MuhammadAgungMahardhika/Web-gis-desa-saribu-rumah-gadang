@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 
 <section class="section">
-    <div class="container-fluid p-4 chat-page-container" style="height: calc(100vh - 56px); /* Example: Adjust '56px' based on your header/footer height */">
+    <div class="container-fluid p-4 px-0 chat-page-container" style="height: calc(100vh - 56px);">
 
         <div class="chat-box mb-3 p-2 border rounded bg-light chat-history-area" id="chat-box" style="overflow-y: auto;">
             <p class="text-muted text-center">Percakapan akan muncul di sini...</p>
@@ -21,32 +21,24 @@
 </section>
 
 <style>
-    /* Add this CSS */
+    /* Pastikan CSS ini juga ada */
+    .section {
+        min-height: 100vh;
+        /* Optional: Ensure section takes full height */
+        display: flex;
+        flex-direction: column;
+    }
 
     .chat-page-container {
         display: flex;
-        /* Enable Flexbox */
         flex-direction: column;
-        /* Stack children vertically */
-        /* The height is set inline above or can be set here */
-        /* height: 100%; /* Use 100% if parent has defined height */
-        /* min-height: 100vh; /* Or use min-height for full page */
+        /* height: calc(100vh - 56px); <--- ini sudah di inline style atau bisa juga di sini */
     }
 
     .chat-history-area {
         flex-grow: 1;
-        /* Allow this element to grow and take up available space */
-        /* Existing styles like overflow-y: auto; and padding/margin are fine */
-        /* Remove the fixed height: 400px; as flex-grow takes over */
-    }
-
-    /* Optional: Ensure the section itself takes up sufficient height */
-    .section {
-        min-height: 100vh;
-        /* Make section at least viewport height */
-        display: flex;
-        /* Can also make section a flex container */
-        flex-direction: column;
+        overflow-y: auto;
+        /* height: 400px; <--- hapus atau timpa ini */
     }
 </style>
 <?= $this->endSection() ?>
