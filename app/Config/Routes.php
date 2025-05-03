@@ -32,7 +32,8 @@ $routes->set404Override();
  * Route Definitions
  * --------------------------------------------------------------------
  */
-
+// mobile
+$routes->get('/api/register', 'Api\User::register');
 // We get a performance increase by specifying the default
 // route since we don't have to scan directories.
 $routes->get('/api/dbCheck', 'Home::dbCheck');
@@ -40,7 +41,7 @@ $routes->get('/', 'LandingPage::index');
 $routes->get('/403', 'Home::error403');
 $routes->get('/login', 'Web\Profile::login');
 $routes->get('/register', 'Web\Profile::register');
-
+$routes->post('/api/login', 'Profile::attemptLogin');
 // Upload files
 $routes->group('upload', ['namespace' => 'App\Controllers\Web'], function ($routes) {
     $routes->post('photo', 'Upload::photo');
