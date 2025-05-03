@@ -2493,10 +2493,9 @@ const UserIdManager = {
       console.error("Gagal menghapus User ID dari sessionStorage:", error);
     }
   },
+  // Fungsi untuk menerima User ID dari B4A WebView
+  receiveUserIdFromB4A(userId) {
+    UserIdManager.saveUserIdToSessionStorage(userId);
+    console.log("User ID diterima dari B4A:", userId);
+  },
 };
-
-// Fungsi untuk menerima User ID dari B4A WebView
-function receiveUserIdFromB4A(userId) {
-  UserIdManager.saveUserIdToSessionStorage(userId);
-  console.log("User ID diterima dari B4A:", userId);
-}
