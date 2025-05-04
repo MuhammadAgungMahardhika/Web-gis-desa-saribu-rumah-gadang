@@ -106,12 +106,24 @@ class User extends ResourceController
         ];
 
         $this->accountModel->insert($requestData); // Sebaiknya periksa hasil insert
-        $role = [
-            'group_id' => 2
-        ];
 
         $newUserId = $this->accountModel->getInsertID();
-        $this->accountModel->update_role_api($newUserId, $role);
+        $roleId = 2;
+        $groupUserData = [
+            'user_id'  => $newUserId,
+            'group_id' => $roleId // Gunakan role_id dari request atau default
+        ];
+
+        // Lakukan insert ke tabel auth_groups_users
+        // Anda mungkin perlu menggunakan model lain atau query builder langsung
+        // Contoh menggunakan query builder:
+        $db = \Config\Database::connect(); // Dapatkan instance database
+        if (!$db->table('auth_groups_users')->insert($groupUserData)) {
+            log_message('error', 'Failed to assign group to user ID: ' . $newUserId);
+            // Anda bisa memilih untuk tetap melanjutkan atau mengembalikan error
+            return $this->respond(['status' => 500, 'message' => 'Failed to assign role.'], 500);
+        }
+        // --
         $response = [
             'status' => 201, // Kode status HTTP untuk Created
             'message' => "Success create new User", // <--- Ubah menjadi string biasa
