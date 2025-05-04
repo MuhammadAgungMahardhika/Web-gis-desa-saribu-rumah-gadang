@@ -5,6 +5,7 @@ namespace App\Controllers\Api;
 use App\Models\AccountModel;
 use CodeIgniter\API\ResponseTrait;
 use CodeIgniter\RESTful\ResourceController;
+use Myth\Auth\Password;
 
 class User extends ResourceController
 {
@@ -94,7 +95,7 @@ class User extends ResourceController
         }
 
         // Hash password sebelum disimpan (sangat penting untuk keamanan)
-        $passwordHash = password_hash($request['password'], PASSWORD_BCRYPT);
+        $passwordHash = Password::hash($request['password']);
 
         // Siapkan data untuk dimasukkan ke database
         $requestData = [
