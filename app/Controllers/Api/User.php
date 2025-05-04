@@ -103,21 +103,38 @@ class User extends ResourceController
             'first_name' => $request['first_name'],
             'last_name' => $request['last_name'],
             'email' => $request['email'],
-            'password' => $passwordHash, // Simpan hash, bukan password asli
+            'password_hash' => $passwordHash, // Simpan hash, bukan password asli
             'role_id' => $request['role_id'],
         ];
 
         // Masukkan data ke database
         $this->accountModel->insert($requestData);
 
-        // Buat response sukses
-        $response = [
-            'status' => 201, // Kode status HTTP untuk Created
-            'message' => [
-                "Success create new Users" // Ubah pesan agar sesuai
-            ]
-        ];
-        return $this->respondCreated($response); // Gunakan helper function untuk response 201
+        $inserted = $this->accountModel->insert($requestData); // Sebaiknya periksa hasil insert
+
+        if ($inserted) {
+            // Ambil ID user yang baru dibuat (jika diperlukan untuk response)
+            $newUserId = $this->accountModel->getInsertID();
+
+            // Buat response sukses
+            $response = [
+                'status' => 201, // Kode status HTTP untuk Created
+                'message' => "Success create new User", // <--- Ubah menjadi string biasa
+                'data' => [ // <-- TAMBAHKAN data jika B4A perlu info user/sesi
+                    'id' => $newUserId,
+                    // 'session_id' => $sessionId, // Jika Anda membuat sesi di sini
+                    // 'csrf_token' => $csrfToken, // Jika Anda membuat token CSRF di sini
+                ]
+            ];
+            return $this->respondCreated($response); // Gunakan helper function untuk response 201
+        } else {
+            // Handle jika insert gagal
+            $response = [
+                'status' => 500, // Internal Server Error
+                'message' => "Failed to save user data to database.",
+            ];
+            return $this->respond($response, 500);
+        }
     }
 
     public function create()
