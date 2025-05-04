@@ -117,14 +117,14 @@ class User extends ResourceController
         ];
 
         // Lakukan insert ke tabel auth_groups_users
-        // Anda mungkin perlu menggunakan model lain atau query builder langsung
-        // Contoh menggunakan query builder:
+
         $db = \Config\Database::connect(); // Dapatkan instance database
         if (!$db->table('auth_groups_users')->insert($groupUserData)) {
             log_message('error', 'Failed to assign group to user ID: ' . $newUserId);
             // Anda bisa memilih untuk tetap melanjutkan atau mengembalikan error
             return $this->respond(['status' => 500, 'message' => 'Failed to assign role.'], 500);
         }
+        $db->close();
         // --
         $response = [
             'status' => 201, // Kode status HTTP untuk Created
