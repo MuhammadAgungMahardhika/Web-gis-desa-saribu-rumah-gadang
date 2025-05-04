@@ -83,7 +83,6 @@ class User extends ResourceController
             'email' => 'required|valid_email', // Pastikan email unik dan valid
             'password' => 'required|min_length[8]', // Password minimal 8 karakter
             'confirm_password' => 'required|matches[password]', // Pastikan konfirmasi password sama
-            'role_id' => 'required|integer', // Pastikan role_id adalah integer
         ];
 
         if (!$this->validate($validationRules)) {
@@ -104,19 +103,18 @@ class User extends ResourceController
             'last_name' => $request['last_name'],
             'email' => $request['email'],
             'password_hash' => $passwordHash, // Simpan hash, bukan password asli
-            'role_id' => $request['role_id'],
         ];
 
-        // Masukkan data ke database
-        $this->accountModel->insert($requestData);
-
         $inserted = $this->accountModel->insert($requestData); // Sebaiknya periksa hasil insert
+        $role = [
+            'group_id' => $request['role_id']
+        ];
 
         if ($inserted) {
+            // Buat response sukses
             // Ambil ID user yang baru dibuat (jika diperlukan untuk response)
             $newUserId = $this->accountModel->getInsertID();
-
-            // Buat response sukses
+            $updateRole = $this->accountModel->update_role_api($newUserId, $role);
             $response = [
                 'status' => 201, // Kode status HTTP untuk Created
                 'message' => "Success create new User", // <--- Ubah menjadi string biasa
