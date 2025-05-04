@@ -105,16 +105,13 @@ class User extends ResourceController
             'password_hash' => $passwordHash, // Simpan hash, bukan password asli
         ];
 
-        $inserted = $this->accountModel->insert($requestData); // Sebaiknya periksa hasil insert
+        $this->accountModel->insert($requestData); // Sebaiknya periksa hasil insert
         $role = [
-            'group_id' => $request['role_id']
+            'group_id' => 2
         ];
 
-
-        // Buat response sukses
-        // Ambil ID user yang baru dibuat (jika diperlukan untuk response)
         $newUserId = $this->accountModel->getInsertID();
-        $updateRole = $this->accountModel->update_role_api($newUserId, $role);
+        $this->accountModel->update_role_api($newUserId, $role);
         $response = [
             'status' => 201, // Kode status HTTP untuk Created
             'message' => "Success create new User", // <--- Ubah menjadi string biasa
