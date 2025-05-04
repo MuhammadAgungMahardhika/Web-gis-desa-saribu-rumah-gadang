@@ -385,7 +385,7 @@
                             '',
                             'success'
                         ).then(() => {
-                            window.location.replace(baseUrl + '/web/reservation/' + user_id)
+                            window.location.reload()
                         });
 
                     },
