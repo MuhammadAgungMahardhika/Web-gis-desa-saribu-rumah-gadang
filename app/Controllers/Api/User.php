@@ -110,29 +110,22 @@ class User extends ResourceController
             'group_id' => $request['role_id']
         ];
 
-        if ($inserted) {
-            // Buat response sukses
-            // Ambil ID user yang baru dibuat (jika diperlukan untuk response)
-            $newUserId = $this->accountModel->getInsertID();
-            $updateRole = $this->accountModel->update_role_api($newUserId, $role);
-            $response = [
-                'status' => 201, // Kode status HTTP untuk Created
-                'message' => "Success create new User", // <--- Ubah menjadi string biasa
-                'data' => [ // <-- TAMBAHKAN data jika B4A perlu info user/sesi
-                    'id' => $newUserId,
-                    // 'session_id' => $sessionId, // Jika Anda membuat sesi di sini
-                    // 'csrf_token' => $csrfToken, // Jika Anda membuat token CSRF di sini
-                ]
-            ];
-            return $this->respondCreated($response); // Gunakan helper function untuk response 201
-        } else {
-            // Handle jika insert gagal
-            $response = [
-                'status' => 500, // Internal Server Error
-                'message' => "Failed to save user data to database.",
-            ];
-            return $this->respond($response, 500);
-        }
+
+        // Buat response sukses
+        // Ambil ID user yang baru dibuat (jika diperlukan untuk response)
+        $newUserId = $this->accountModel->getInsertID();
+        $updateRole = $this->accountModel->update_role_api($newUserId, $role);
+        $response = [
+            'status' => 201, // Kode status HTTP untuk Created
+            'message' => "Success create new User", // <--- Ubah menjadi string biasa
+            'data' => [ // <-- TAMBAHKAN data jika B4A perlu info user/sesi
+                'id' => $newUserId,
+                // 'session_id' => $sessionId, // Jika Anda membuat sesi di sini
+                // 'csrf_token' => $csrfToken, // Jika Anda membuat token CSRF di sini
+            ]
+        ];
+        return $this->respondCreated($response); // Gunakan helper function untuk response 201
+
     }
 
     public function create()
