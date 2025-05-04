@@ -103,9 +103,7 @@ class User extends ResourceController
             'first_name' => $request['first_name'],
             'last_name' => $request['last_name'],
             'email' => $request['email'],
-            'address' => $request['address'] ?? '', // Gunakan null coalescing untuk field yang opsional
             'password' => $passwordHash, // Simpan hash, bukan password asli
-            'avatar' => $request['avatar'] ?? '',    // Gunakan null coalescing untuk field yang opsional
             'role_id' => $request['role_id'],
         ];
 
