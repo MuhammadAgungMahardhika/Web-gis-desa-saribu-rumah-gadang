@@ -104,6 +104,7 @@ class User extends ResourceController
             'last_name' => $request['last_name'],
             'email' => $request['email'],
             'password_hash' => $passwordHash, // Simpan hash, bukan password asli
+            'active' => true
         ];
 
         $this->accountModel->insert($requestData); // Sebaiknya periksa hasil insert
