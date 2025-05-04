@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class AccountModel extends Model
 {
     protected $DBGroup          = 'default';
-    protected $table            = 'account';
+    protected $table            = 'users';
     protected $primaryKey       = 'id';
     protected $returnType       = 'array';
     protected $allowedFields    = ['id', 'username', 'first_name', 'last_name', 'email', 'address', 'phone', 'password', 'avatar', 'last_login', 'role_id'];
