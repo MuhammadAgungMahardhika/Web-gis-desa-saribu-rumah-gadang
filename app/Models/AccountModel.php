@@ -10,7 +10,7 @@ class AccountModel extends Model
     protected $table            = 'users';
     protected $primaryKey       = 'id';
     protected $returnType       = 'array';
-    protected $allowedFields    = ['id', 'username', 'first_name', 'last_name', 'email', 'address', 'password', 'avatar', 'last_login', 'role_id'];
+    protected $allowedFields    = ['id', 'username', 'first_name', 'last_name', 'email', 'address', 'password_hash', 'avatar', 'last_login', 'role_id'];
 
     // Dates
     protected $useTimestamps = true;
