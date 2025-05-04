@@ -80,7 +80,7 @@ class User extends ResourceController
             'username' => 'required|is_unique[users.username]', // Pastikan username unik
             'first_name' => 'required',
             'last_name' => 'required',
-            'email' => 'required|valid_email|is_unique[users.email]', // Pastikan email unik dan valid
+            'email' => 'required|valid_email', // Pastikan email unik dan valid
             'password' => 'required|min_length[8]', // Password minimal 8 karakter
             'confirm_password' => 'required|matches[password]', // Pastikan konfirmasi password sama
             'role_id' => 'required|integer', // Pastikan role_id adalah integer
@@ -104,10 +104,8 @@ class User extends ResourceController
             'first_name' => $request['first_name'],
             'last_name' => $request['last_name'],
             'email' => $request['email'],
-            'address' => $request['address'] ?? '', // Gunakan null coalescing untuk field yang opsional
             'phone' => $request['phone'] ?? '',     // Gunakan null coalescing untuk field yang opsional
             'password' => $passwordHash, // Simpan hash, bukan password asli
-            'avatar' => $request['avatar'] ?? '',    // Gunakan null coalescing untuk field yang opsional
             'role_id' => $request['role_id'],
         ];
 
