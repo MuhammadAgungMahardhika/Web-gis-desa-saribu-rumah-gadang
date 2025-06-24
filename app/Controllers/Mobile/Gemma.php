@@ -634,15 +634,14 @@ If the user's request doesn't match any function, respond conversationally based
                 $package = $this->modelPackage->find($package_id);
             } elseif (!empty($packageName)) {
 
-            $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
             $package = $this->modelPackage
-                        ->like('LOWER(name)', $normalizedName, 'both')
+                        ->like('LOWER(name)', $packageName, 'both')
                         ->first();
             if (!$package) {
                 log_message('error', "Paket tidak ditemukan untuk input: {$packageName}");
             
                 $suggestions = $this->modelPackage
-                    ->like('LOWER(name)', $normalizedName, 'both')
+                    ->like('LOWER(name)', $packageName, 'both')
                     ->limit(5)
                     ->findAll();
             
