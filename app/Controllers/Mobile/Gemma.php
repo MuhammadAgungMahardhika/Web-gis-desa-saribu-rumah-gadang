@@ -1092,7 +1092,7 @@ If the user's request doesn't match any function, respond conversationally based
 
             $rumahGadang_name = $rumahGadang['name'];
             $homestay_id = $homestay['id'];
-            $price = $rumahGadang['ticket_price'] ?? 0; // Assuming ticket_price is the nightly rate
+            $price = $rumahGadang['price_ticket'] ?? 0; // Assuming ticket_price is the nightly rate
 
 
             // 2. Check for missing dates and number of people sequentially
