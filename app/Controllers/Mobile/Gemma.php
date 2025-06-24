@@ -635,13 +635,9 @@ If the user's request doesn't match any function, respond conversationally based
             } elseif (!empty($packageName)) {
 
              $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
-             $package = $this->modelPackage
-                        ->groupStart()
-                            ->like('LOWER(name)', $normalizedName, 'both')
-                            ->orLike('LOWER(name)', '%' . $normalizedName . '%') // backup if needed
-                        ->groupEnd()
+            $package = $this->modelPackage
+                        ->like('LOWER(name)', $normalizedName, 'both')
                         ->first();
-            
               if (!$package) {
                     $suggestions = $this->modelPackage
                         ->like('LOWER(name)', $normalizedName, 'both')
@@ -649,7 +645,7 @@ If the user's request doesn't match any function, respond conversationally based
                         ->findAll();
                 
                     if (count($suggestions) > 0) {
-                        $list = array_map(fn($s) => "- <b>{$s['name']}</b>", $suggestions);
+                        $list = array_map(fn($s) => "- <b>" . htmlspecialchars($s['name']) . "</b>", $suggestions);
                         return $this->response->setJSON([
                             "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin yang Anda maksud salah satu ini:<br>" . implode("<br>", $list)
                         ]);
@@ -663,8 +659,8 @@ If the user's request doesn't match any function, respond conversationally based
 
             $package_name = $package['name'];
             $package_id = $package['id']; // Ensure we have the correct ID
-            $capacity = $package['capacity'];
-            $price = $package['price'];
+            $capacity = $package['capacity'] ?? 0;
+            $price = $package['price'] ?? 0;
 
             // 2. Check for missing date
             if (empty($requestDate)) {
