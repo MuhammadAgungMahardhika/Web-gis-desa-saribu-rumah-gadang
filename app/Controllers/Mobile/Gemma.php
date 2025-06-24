@@ -379,7 +379,7 @@ If the user's request doesn't match any function, respond conversationally based
                     } else {
                         // This function now handles checking for missing parameters internally
                         // We just pass the arguments as received from the AI
-                          $functionResult = $this->makePackageReservationAI($arguments);
+                        $functionResult = $this->makePackageReservationAI($arguments);
                     }
                     break;
                 case "remove_package_reservation_ai":
@@ -618,190 +618,190 @@ If the user's request doesn't match any function, respond conversationally based
 
     // 🔥 Modified: Function to handle AI initiated package reservation
     // Now accepts arguments array and checks for missing info conversationally
-     public function makePackageReservationAI($arguments)
-{
-    try {
-        if (!$this->userId) {
-            return $this->response->setJSON([
-                "response" => "Mohon maaf, Anda perlu login terlebih dahulu untuk bisa melakukan pemesanan paket wisata."
-            ]);
-        }
+    public function makePackageReservationAI($arguments)
+    {
+        try {
+            if (!$this->userId) {
+                return $this->response->setJSON([
+                    "response" => "Mohon maaf, Anda perlu login terlebih dahulu untuk bisa melakukan pemesanan paket wisata."
+                ]);
+            }
 
-        $user_id = $this->userId;
+            $user_id = $this->userId;
 
-        $package_id = $arguments['packageId'] ?? null;
-        $packageName = $arguments['packageName'] ?? null;
-        $requestDate = $arguments['requestDate'] ?? null;
-        $numberPeople = $arguments['numberPeople'] ?? null;
+            $package_id = $arguments['packageId'] ?? null;
+            $packageName = $arguments['packageName'] ?? null;
+            $requestDate = $arguments['requestDate'] ?? null;
+            $numberPeople = $arguments['numberPeople'] ?? null;
 
-        // 1. Identifikasi paket
-        // 1. Identifikasi paket berdasarkan ID atau nama
-        $package = null;
-        
-       
-        
-        if (!$package && !empty($packageName)) {
-            // Normalisasi nama paket
-            $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
-        
-            // Coba cari berdasarkan nama
-            $package = $this->modelPackage
-                ->like('LOWER(name)', $normalizedName, 'both')
-                ->first();
-        
-            // Jika tidak ditemukan, tawarkan saran
-            if (!$package) {
-                $suggestions = $this->modelPackage
+            // 1. Identifikasi paket
+            // 1. Identifikasi paket berdasarkan ID atau nama
+            $package = null;
+
+
+
+            if (!$package && !empty($packageName)) {
+                // Normalisasi nama paket
+                $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
+
+                // Coba cari berdasarkan nama
+                $package = $this->modelPackage
                     ->like('LOWER(name)', $normalizedName, 'both')
-                    ->limit(5)
-                    ->findAll();
-        
-                if (!empty($suggestions)) {
-                    $list = array_map(fn($s) => "- <b>" . htmlspecialchars($s['name']) . "</b>", $suggestions);
+                    ->first();
+
+                // Jika tidak ditemukan, tawarkan saran
+                if (!$package) {
+                    $suggestions = $this->modelPackage
+                        ->like('LOWER(name)', $normalizedName, 'both')
+                        ->limit(5)
+                        ->findAll();
+
+                    if (!empty($suggestions)) {
+                        $list = array_map(fn($s) => "- <b>" . htmlspecialchars($s['name']) . "</b>", $suggestions);
+                        return $this->response->setJSON([
+                            "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin maksud Anda salah satu dari berikut:<br>" . implode("<br>", $list)
+                        ]);
+                    }
+
                     return $this->response->setJSON([
-                        "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin maksud Anda salah satu dari berikut:<br>" . implode("<br>", $list)
+                        "response" => "Maaf, tidak ditemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
                     ]);
                 }
-        
-                return $this->response->setJSON([
-                    "response" => "Maaf, tidak ditemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
-                ]);
             }
-        }
-         if (!$package && !empty($package_id)) {
-            $package = $this->modelPackage->find($package_id);
-        
-            // Jika ID ditemukan tapi tidak valid
+            if (!$package && !empty($package_id)) {
+                $package = $this->modelPackage->find($package_id);
+
+                // Jika ID ditemukan tapi tidak valid
+                if (!$package) {
+                    return $this->response->setJSON([
+                        "response" => "Maaf, tidak ditemukan paket wisata dengan ID <b>{$package_id}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
+                    ]);
+                }
+            }
             if (!$package) {
                 return $this->response->setJSON([
-                    "response" => "Maaf, tidak ditemukan paket wisata dengan ID <b>{$package_id}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
+                    "response" => "Mohon sebutkan nama atau ID paket wisata yang ingin Anda pesan."
                 ]);
             }
-        }
-        if (!$package) {
-            return $this->response->setJSON([
-                "response" => "Mohon sebutkan nama atau ID paket wisata yang ingin Anda pesan."
-            ]);
-        }
 
-        // Nilai-nilai penting dari paket
-        $package_name = $package['name'];
-        $package_id = $package['id'];
-        $capacity = $package['capacity'] ?? 0;
-        $price = $package['price'] ?? 0;
+            // Nilai-nilai penting dari paket
+            $package_name = $package['name'];
+            $package_id = $package['id'];
+            $capacity = $package['capacity'] ?? 0;
+            $price = $package['price'] ?? 0;
 
-        // 2. Validasi tanggal
-        if (empty($requestDate)) {
-            return $this->response->setJSON([
-                "response" => "Baik, paket <b>{$package_name}</b>. Untuk tanggal berapa Anda ingin reservasi? Mohon sebutkan tanggalnya (contoh: 20-05-2025 atau 20 Mei 2025)."
-            ]);
-        }
-
-        // 3. Validasi jumlah orang
-        if ($numberPeople === null || !is_numeric($numberPeople) || (int)$numberPeople <= 0) {
-            session()->set('booking_package_temp', [
-                'packageId' => $package_id,
-                'requestDate' => $requestDate,
-            ]);
-
-            return $this->response->setJSON([
-                "response" => "Oke, reservasi paket <b>{$package_name}</b> untuk tanggal <b>{$requestDate}</b>. Berapa orang yang akan ikut?"
-            ]);
-        }
-
-        $numberPeople = (int)$numberPeople;
-
-        // 4. Validasi format tanggal
-        $dateObj = null;
-        $formatsToTry = ['Y-m-d', 'd-m-Y', 'Y/m/d', 'd/m/Y', 'd F Y', 'j F Y', 'd M Y', 'j M Y'];
-
-        foreach ($formatsToTry as $format) {
-            $parsed = DateTime::createFromFormat($format, $requestDate);
-            if ($parsed && $parsed->format($format) === $requestDate) {
-                $dateObj = $parsed;
-                break;
+            // 2. Validasi tanggal
+            if (empty($requestDate)) {
+                return $this->response->setJSON([
+                    "response" => "Baik, paket <b>{$package_name}</b>. Untuk tanggal berapa Anda ingin reservasi? Mohon sebutkan tanggalnya (contoh: 20-05-2025 atau 20 Mei 2025)."
+                ]);
             }
-        }
 
-        if (!$dateObj) {
+            // 3. Validasi jumlah orang
+            if ($numberPeople === null || !is_numeric($numberPeople) || (int)$numberPeople <= 0) {
+                session()->set('booking_package_temp', [
+                    'packageId' => $package_id,
+                    'requestDate' => $requestDate,
+                ]);
+
+                return $this->response->setJSON([
+                    "response" => "Oke, reservasi paket <b>{$package_name}</b> untuk tanggal <b>{$requestDate}</b>. Berapa orang yang akan ikut?"
+                ]);
+            }
+
+            $numberPeople = (int)$numberPeople;
+
+            // 4. Validasi format tanggal
+            $dateObj = null;
+            $formatsToTry = ['Y-m-d', 'd-m-Y', 'Y/m/d', 'd/m/Y', 'd F Y', 'j F Y', 'd M Y', 'j M Y'];
+
+            foreach ($formatsToTry as $format) {
+                $parsed = DateTime::createFromFormat($format, $requestDate);
+                if ($parsed && $parsed->format($format) === $requestDate) {
+                    $dateObj = $parsed;
+                    break;
+                }
+            }
+
+            if (!$dateObj) {
+                return $this->response->setJSON([
+                    "response" => "Maaf, format tanggal <b>{$requestDate}</b> tidak valid. Mohon gunakan format seperti YYYY-MM-DD (contoh: 2025-05-20) atau DD-MM-YYYY (contoh: 20-05-2025)."
+                ]);
+            }
+
+            $formattedRequestDate = $dateObj->format('Y-m-d');
+            $today = new DateTime('today');
+            $requestDateTime = new DateTime($formattedRequestDate);
+
+            if ($requestDateTime <= $today) {
+                return $this->response->setJSON([
+                    "response" => "Tanggal reservasi harus untuk hari esok atau setelahnya. Mohon pilih tanggal setelah tanggal " . $today->format('d F Y') . "."
+                ]);
+            }
+
+            // 5. Validasi kapasitas
+            if ($numberPeople > $capacity) {
+                return $this->response->setJSON([
+                    "response" => "Maaf, jumlah peserta ({$numberPeople} orang) melebihi kapasitas maksimal paket <b>{$package_name}</b> ({$capacity} orang). Silakan sesuaikan jumlah peserta atau pilih paket lain."
+                ]);
+            }
+
+            // 6. Cek reservasi ganda
+            $existingReservation = $this->modelReservation
+                ->where('id_user', $user_id)
+                ->where('id_package', $package_id)
+                ->where('request_date', $formattedRequestDate)
+                ->whereIn('id_reservation_status', [1, 2, 4])
+                ->first();
+
+            if ($existingReservation) {
+                return $this->response->setJSON([
+                    "response" => "Anda sudah memiliki reservasi untuk paket <b>{$package_name}</b> pada tanggal <b>" . date('d F Y', strtotime($formattedRequestDate)) . "</b> (Kode Booking: <b>{$existingReservation['id']}</b>)."
+                ]);
+            }
+
+            // 7. Simpan reservasi
+            $id = $this->modelReservation->get_new_id_api();
+            $total_price = $numberPeople * $price;
+            $reservationData = [
+                'id' => $id,
+                'id_user' => $user_id,
+                'id_package' => $package_id,
+                'request_date' => $formattedRequestDate,
+                'id_reservation_status' => 1,
+                'number_people' => $numberPeople,
+                'total_price' => $total_price,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+
+            $added = $this->modelReservation->add_r_api($reservationData);
+
+            if (!$added) {
+                throw new Exception("Gagal menyimpan data reservasi paket.");
+            }
+
+            session()->remove('booking_package_temp');
+
+            // 8. Respon sukses
+            $formattedDate = date('d F Y', strtotime($formattedRequestDate));
+            $totalPriceFormatted = number_format($total_price, 0, ',', '.');
+
             return $this->response->setJSON([
-                "response" => "Maaf, format tanggal <b>{$requestDate}</b> tidak valid. Mohon gunakan format seperti YYYY-MM-DD (contoh: 2025-05-20) atau DD-MM-YYYY (contoh: 20-05-2025)."
+                "response" => "<span class='text-success'>✅ Reservasi paket <b>{$package_name}</b> berhasil dibuat!</span><br><br>" .
+                    "📋 <b>Detail Reservasi:</b><br>" .
+                    "🔖 Kode Booking: <b>{$id}</b><br>" .
+                    "👥 Jumlah Peserta: <b>{$numberPeople} orang</b><br>" .
+                    "📅 Tanggal: <b>{$formattedDate}</b><br>" .
+                    "💰 Total Harga: <b>Rp {$totalPriceFormatted}</b><br><br>" .
+                    "Silakan lakukan pembayaran sesuai petunjuk yang akan dikirimkan ke email Anda.<br>" .
+                    "Untuk melihat reservasi Anda, ketik <b>'Lihat reservasi saya'</b>."
             ]);
+        } catch (Exception $e) {
+            log_message('error', 'Exception in makePackageReservationAI: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            return $this->response->setJSON(["response" => "❌ " . $e->getMessage()]);
         }
-
-        $formattedRequestDate = $dateObj->format('Y-m-d');
-        $today = new DateTime('today');
-        $requestDateTime = new DateTime($formattedRequestDate);
-
-        if ($requestDateTime <= $today) {
-            return $this->response->setJSON([
-                "response" => "Tanggal reservasi harus untuk hari esok atau setelahnya. Mohon pilih tanggal setelah tanggal " . $today->format('d F Y') . "."
-            ]);
-        }
-
-        // 5. Validasi kapasitas
-        if ($numberPeople > $capacity) {
-            return $this->response->setJSON([
-                "response" => "Maaf, jumlah peserta ({$numberPeople} orang) melebihi kapasitas maksimal paket <b>{$package_name}</b> ({$capacity} orang). Silakan sesuaikan jumlah peserta atau pilih paket lain."
-            ]);
-        }
-
-        // 6. Cek reservasi ganda
-        $existingReservation = $this->modelReservation
-            ->where('id_user', $user_id)
-            ->where('id_package', $package_id)
-            ->where('request_date', $formattedRequestDate)
-            ->whereIn('id_reservation_status', [1, 2, 4])
-            ->first();
-
-        if ($existingReservation) {
-            return $this->response->setJSON([
-                "response" => "Anda sudah memiliki reservasi untuk paket <b>{$package_name}</b> pada tanggal <b>" . date('d F Y', strtotime($formattedRequestDate)) . "</b> (Kode Booking: <b>{$existingReservation['id']}</b>)."
-            ]);
-        }
-
-        // 7. Simpan reservasi
-        $id = $this->modelReservation->get_new_id_api();
-        $total_price = $numberPeople * $price;
-        $reservationData = [
-            'id' => $id,
-            'id_user' => $user_id,
-            'id_package' => $package_id,
-            'request_date' => $formattedRequestDate,
-            'id_reservation_status' => 1,
-            'number_people' => $numberPeople,
-            'total_price' => $total_price,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
-
-        $added = $this->modelReservation->add_r_api($reservationData);
-
-        if (!$added) {
-            throw new Exception("Gagal menyimpan data reservasi paket.");
-        }
-
-        session()->remove('booking_package_temp');
-
-        // 8. Respon sukses
-        $formattedDate = date('d F Y', strtotime($formattedRequestDate));
-        $totalPriceFormatted = number_format($total_price, 0, ',', '.');
-
-        return $this->response->setJSON([
-            "response" => "<span class='text-success'>✅ Reservasi paket <b>{$package_name}</b> berhasil dibuat!</span><br><br>" .
-                "📋 <b>Detail Reservasi:</b><br>" .
-                "🔖 Kode Booking: <b>{$id}</b><br>" .
-                "👥 Jumlah Peserta: <b>{$numberPeople} orang</b><br>" .
-                "📅 Tanggal: <b>{$formattedDate}</b><br>" .
-                "💰 Total Harga: <b>Rp {$totalPriceFormatted}</b><br><br>" .
-                "Silakan lakukan pembayaran sesuai petunjuk yang akan dikirimkan ke email Anda.<br>" .
-                "Untuk melihat reservasi Anda, ketik <b>'Lihat reservasi saya'</b>."
-        ]);
-    } catch (Exception $e) {
-        log_message('error', 'Exception in makePackageReservationAI: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-        return $this->response->setJSON(["response" => "❌ " . $e->getMessage()]);
     }
-}
 
     // Function to get user reservations (remains the same, minor formatting tweaks)
     public function getReservation()
@@ -1092,7 +1092,7 @@ If the user's request doesn't match any function, respond conversationally based
 
             $rumahGadang_name = $rumahGadang['name'];
             $homestay_id = $homestay['id'];
-            $price = $homestay['ticket_price'] ?? 0; // Assuming ticket_price is the nightly rate
+            $price = $rumahGadang['ticket_price'] ?? 0; // Assuming ticket_price is the nightly rate
 
 
             // 2. Check for missing dates and number of people sequentially
