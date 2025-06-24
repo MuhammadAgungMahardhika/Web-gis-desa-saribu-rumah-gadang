@@ -638,16 +638,7 @@ If the user's request doesn't match any function, respond conversationally based
         // 1. Identifikasi paket berdasarkan ID atau nama
         $package = null;
         
-        if (!empty($package_id)) {
-            $package = $this->modelPackage->find($package_id);
-        
-            // Jika ID ditemukan tapi tidak valid
-            if (!$package) {
-                return $this->response->setJSON([
-                    "response" => "Maaf, tidak ditemukan paket wisata dengan ID <b>{$package_id}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
-                ]);
-            }
-        }
+       
         
         if (!$package && !empty($packageName)) {
             // Normalisasi nama paket
@@ -677,7 +668,16 @@ If the user's request doesn't match any function, respond conversationally based
                 ]);
             }
         }
+         if (!$package && !empty($package_id)) {
+            $package = $this->modelPackage->find($package_id);
         
+            // Jika ID ditemukan tapi tidak valid
+            if (!$package) {
+                return $this->response->setJSON([
+                    "response" => "Maaf, tidak ditemukan paket wisata dengan ID <b>{$package_id}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
+                ]);
+            }
+        }
         if (!$package) {
             return $this->response->setJSON([
                 "response" => "Mohon sebutkan nama atau ID paket wisata yang ingin Anda pesan."
