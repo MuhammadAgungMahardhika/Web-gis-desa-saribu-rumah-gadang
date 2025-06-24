@@ -185,11 +185,11 @@ If the user's request doesn't match any function, respond conversationally based
                             "properties" => [
                                 "packageId" => [
                                     "type" => "string",
-                                    "description" => "ID of the tour package to be booked. Use this if known. If not, use packageName."
+                                    "description" => "ID of the package to be booked. Use this if known. If not, use packageName."
                                 ],
                                 "packageName" => [
                                     "type" => "string",
-                                    "description" => "Name of the tour package to be booked. Use this if packageId is not known. Try to match the user's input to an existing package name."
+                                    "description" => "Name of the package to be booked. Use this if packageId is not known. Try to match the user's input to an existing package name."
                                 ],
                                 "requestDate" => [
                                     "type" => "string",
@@ -372,9 +372,15 @@ If the user's request doesn't match any function, respond conversationally based
                     }
                     break;
                 case "make_package_reservation_ai":
-                    // This function now handles checking for missing parameters internally
-                    // We just pass the arguments as received from the AI
-                    $functionResult = $this->makePackageReservationAI($arguments);
+                    if (!$this->userId) {
+                        $functionResult = $this->response->setJSON([
+                            "response" => "Mohon login terlebih dahulu untuk memesan homestay."
+                        ]);
+                    } else {
+                        // This function now handles checking for missing parameters internally
+                        // We just pass the arguments as received from the AI
+                          $functionResult = $this->makePackageReservationAI($arguments);
+                    }
                     break;
                 case "remove_package_reservation_ai":
                     // Check if user is logged in
