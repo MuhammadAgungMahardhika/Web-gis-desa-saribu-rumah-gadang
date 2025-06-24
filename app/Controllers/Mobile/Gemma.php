@@ -629,40 +629,50 @@ If the user's request doesn't match any function, respond conversationally based
         $numberPeople = $arguments['numberPeople'] ?? null;
 
         // 1. Identifikasi paket
+        // 1. Identifikasi paket berdasarkan ID atau nama
         $package = null;
+        
         if (!empty($package_id)) {
             $package = $this->modelPackage->find($package_id);
-
+        
+            // Jika ID ditemukan tapi tidak valid
             if (!$package) {
                 return $this->response->setJSON([
-                    "response" => "Maaf, kami tidak menemukan paket wisata dengan ID tersebut. Silakan coba lagi atau ketik 'Daftar paket wisata'."
+                    "response" => "Maaf, tidak ditemukan paket wisata dengan ID <b>{$package_id}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
                 ]);
             }
-        } elseif (!empty($packageName)) {
+        }
+        
+        if (!$package && !empty($packageName)) {
+            // Normalisasi nama paket
             $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
-
+        
+            // Coba cari berdasarkan nama
             $package = $this->modelPackage
                 ->like('LOWER(name)', $normalizedName, 'both')
                 ->first();
-
+        
+            // Jika tidak ditemukan, tawarkan saran
             if (!$package) {
                 $suggestions = $this->modelPackage
                     ->like('LOWER(name)', $normalizedName, 'both')
                     ->limit(5)
                     ->findAll();
-
-                if (count($suggestions) > 0) {
+        
+                if (!empty($suggestions)) {
                     $list = array_map(fn($s) => "- <b>" . htmlspecialchars($s['name']) . "</b>", $suggestions);
                     return $this->response->setJSON([
-                        "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin yang Anda maksud salah satu ini:<br>" . implode("<br>", $list)
+                        "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin maksud Anda salah satu dari berikut:<br>" . implode("<br>", $list)
                     ]);
                 }
-
+        
                 return $this->response->setJSON([
-                    "response" => "Maaf, kami tidak menemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat semua pilihan."
+                    "response" => "Maaf, tidak ditemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat pilihan."
                 ]);
             }
-        } else {
+        }
+        
+        if (!$package) {
             return $this->response->setJSON([
                 "response" => "Mohon sebutkan nama atau ID paket wisata yang ingin Anda pesan."
             ]);
