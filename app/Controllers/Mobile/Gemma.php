@@ -656,6 +656,7 @@ If the user's request doesn't match any function, respond conversationally based
                 return $this->response->setJSON([
                     "response" => "Maaf, kami tidak menemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat semua pilihan."
                 ]);
+             }
             }
 
 
