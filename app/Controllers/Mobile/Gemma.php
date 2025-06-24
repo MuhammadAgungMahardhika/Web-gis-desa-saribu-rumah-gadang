@@ -634,28 +634,30 @@ If the user's request doesn't match any function, respond conversationally based
                 $package = $this->modelPackage->find($package_id);
             } elseif (!empty($packageName)) {
 
-             $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
+            $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
             $package = $this->modelPackage
                         ->like('LOWER(name)', $normalizedName, 'both')
                         ->first();
-              if (!$package) {
-                    $suggestions = $this->modelPackage
-                        ->like('LOWER(name)', $normalizedName, 'both')
-                        ->limit(5)
-                        ->findAll();
-                
-                    if (count($suggestions) > 0) {
-                        $list = array_map(fn($s) => "- <b>" . htmlspecialchars($s['name']) . "</b>", $suggestions);
-                        return $this->response->setJSON([
-                            "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin yang Anda maksud salah satu ini:<br>" . implode("<br>", $list)
-                        ]);
-                    }
-                
+            if (!$package) {
+                log_message('error', "Paket tidak ditemukan untuk input: {$packageName}");
+            
+                $suggestions = $this->modelPackage
+                    ->like('LOWER(name)', $normalizedName, 'both')
+                    ->limit(5)
+                    ->findAll();
+            
+                if (count($suggestions) > 0) {
+                    $list = array_map(fn($s) => "- <b>" . htmlspecialchars($s['name']) . "</b>", $suggestions);
                     return $this->response->setJSON([
-                        "response" => "Maaf, kami tidak menemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat semua pilihan."
+                        "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin yang Anda maksud salah satu ini:<br>" . implode("<br>", $list)
                     ]);
                 }
+            
+                return $this->response->setJSON([
+                    "response" => "Maaf, kami tidak menemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat semua pilihan."
+                ]);
             }
+
 
             $package_name = $package['name'];
             $package_id = $package['id']; // Ensure we have the correct ID
