@@ -2,7 +2,7 @@
 
 namespace App\Controllers\Web;
 
-use App\Models\DetailFacilityhomestayModel;
+use App\Models\DetailFacilityHomestayModel;
 use App\Models\GalleryHomestayModel;
 use App\Models\HomestayFacilityModel;
 use App\Models\HomestayModel;
@@ -22,7 +22,7 @@ class Homestay extends ResourcePresenter
     {
         $this->HomestayModel = new HomestayModel();
         $this->homestayFacilityModel = new HomestayFacilityModel();
-        $this->detailFacilityHomestayModel = new DetailFacilityhomestayModel();
+        $this->detailFacilityHomestayModel = new DetailFacilityHomestayModel();
         $this->homestayGalleryModel = new GalleryHomestayModel();
     }
     /**
