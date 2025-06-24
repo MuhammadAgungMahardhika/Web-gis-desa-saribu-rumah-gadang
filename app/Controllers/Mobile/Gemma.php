@@ -630,6 +630,7 @@ If the user's request doesn't match any function, respond conversationally based
 
             // 1. Identify the package
             $package = null;
+            
             if (!empty($package_id)) {
                 $package = $this->modelPackage->find($package_id);
             } elseif (!empty($packageName)) {
@@ -637,6 +638,9 @@ If the user's request doesn't match any function, respond conversationally based
             $package = $this->modelPackage
                         ->like('LOWER(name)', $packageName, 'both')
                         ->first();
+            
+            }
+
             if (!$package) {
                 log_message('error', "Paket tidak ditemukan untuk input: {$packageName}");
             
@@ -655,7 +659,6 @@ If the user's request doesn't match any function, respond conversationally based
                 return $this->response->setJSON([
                     "response" => "Maaf, kami tidak menemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat semua pilihan."
                 ]);
-             }
             }
 
 
