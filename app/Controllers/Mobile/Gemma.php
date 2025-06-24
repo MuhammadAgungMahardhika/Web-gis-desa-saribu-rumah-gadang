@@ -1059,14 +1059,15 @@ If the user's request doesn't match any function, respond conversationally based
                 }
             } elseif (!empty($rumahGadangOrHomestayName)) {
                 // Try finding by exact name first, then fuzzy, filtering for those with homestay links
+
                 $rumahGadang = $this->modelRumahGadang
                     ->where('id_homestay IS NOT NULL', null, false)
-                    ->groupStart() // Group the name search conditions
-                    ->where('name', $rumahGadangOrHomestayName)
-                    ->orWhere("SOUNDEX(name)", soundex($rumahGadangOrHomestayName))
-                    ->orLike("name", $rumahGadangOrHomestayName, 'both')
+                    ->groupStart()
+                    ->like('name', $rumahGadangOrHomestayName, 'both') // Lebih toleran
+                    ->orLike('LOWER(name)', strtolower($rumahGadangOrHomestayName), 'both') // Jaga-jaga case-sensitive
                     ->groupEnd()
                     ->first();
+
 
                 if ($rumahGadang && !empty($rumahGadang['id_homestay'])) {
                     $homestay = $this->modelHomestay->find($rumahGadang['id_homestay']);
