@@ -633,30 +633,38 @@ If the user's request doesn't match any function, respond conversationally based
             if (!empty($package_id)) {
                 $package = $this->modelPackage->find($package_id);
             } elseif (!empty($packageName)) {
-                // Try finding by exact name first, then fuzzy
-                $package = $this->modelPackage
-                    ->where('name', $packageName)
-                    ->first();
-                if (!$package) {
-                    $package = $this->modelPackage
-                        ->where("SOUNDEX(name)", soundex($packageName))
-                        ->orLike("name", $packageName, 'both')
-                        ->first();
-                }
-            }
 
-            if (!$package) {
-                // If package not found, ask the user to check the list
-                return $this->response->setJSON([
-                    "response" => "Maaf, paket wisata yang Anda maksud tidak ditemukan. Anda bisa melihat daftar paket wisata yang tersedia dengan mengetik 'Daftar paket wisata'."
-                ]);
+             $normalizedName = strtolower(trim(preg_replace('/\s+/', ' ', $packageName)));
+             $package = $this->modelPackage
+                        ->groupStart()
+                            ->like('LOWER(name)', $normalizedName, 'both')
+                            ->orLike('LOWER(name)', '%' . $normalizedName . '%') // backup if needed
+                        ->groupEnd()
+                        ->first();
+            
+              if (!$package) {
+                    $suggestions = $this->modelPackage
+                        ->like('LOWER(name)', $normalizedName, 'both')
+                        ->limit(5)
+                        ->findAll();
+                
+                    if (count($suggestions) > 0) {
+                        $list = array_map(fn($s) => "- <b>{$s['name']}</b>", $suggestions);
+                        return $this->response->setJSON([
+                            "response" => "Paket <b>{$packageName}</b> tidak ditemukan. Mungkin yang Anda maksud salah satu ini:<br>" . implode("<br>", $list)
+                        ]);
+                    }
+                
+                    return $this->response->setJSON([
+                        "response" => "Maaf, kami tidak menemukan paket wisata dengan nama <b>{$packageName}</b>. Silakan ketik 'Daftar paket wisata' untuk melihat semua pilihan."
+                    ]);
+                }
             }
 
             $package_name = $package['name'];
             $package_id = $package['id']; // Ensure we have the correct ID
             $capacity = $package['capacity'];
             $price = $package['price'];
-
 
             // 2. Check for missing date
             if (empty($requestDate)) {
