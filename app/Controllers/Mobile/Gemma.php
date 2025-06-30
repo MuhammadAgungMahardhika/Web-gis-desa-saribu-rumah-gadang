@@ -17,7 +17,7 @@ class Gemma extends ResourcePresenter
     protected $helpers = ['auth', 'url', 'filesystem'];
     // Make sure to use environment variables or a secure method for API keys
     // For demonstration, keeping it here, but recommend moving to .env
-    protected $apiKey = getenv('GROQ');
+    protected $apiKey;
     protected $apiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
     protected $modelRumahGadang;
@@ -29,6 +29,7 @@ class Gemma extends ResourcePresenter
 
     public function __construct()
     {
+        $this->apiKey = getenv('groq_apiKey');
         $this->currentUrl = 'mobile';
         $this->modelRumahGadang = new RumahGadangModel();
         $this->modelPackage = new PackageModel();
