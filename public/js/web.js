@@ -397,12 +397,12 @@ function objectInfoWindow(id) {
           data.ticket_price == 0 ? "Free" : "Rp " + data.ticket_price;
         let open = data.open.substring(0, data.open.length - 3);
         let close = data.close.substring(0, data.close.length - 3);
-        console.log(data);
+
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
           name +
-          "</p> <br>" +
+          "</p>" +
           '<p><i class="fa-solid fa-clock me-2"></i> ' +
           open +
           " - " +
@@ -433,8 +433,8 @@ function objectInfoWindow(id) {
           ')"><i class="fa-solid fa-compass"></i></a>' +
           "</div>";
         contentMobile =
-          '<br><div class="text-center">' +
-          '<a title="Route" class="btn icon btn-outline-primary mx-1" id="routeInfoWindow" onclick="routeTo(' +
+          '<div class="text-center">' +
+          '<a title="Route" class="btn icon btn-outline-primary mx-1 btn-sm" id="routeInfoWindow" onclick="routeTo(' +
           lat +
           ", " +
           lng +
@@ -443,9 +443,12 @@ function objectInfoWindow(id) {
 
         contentHomestay = "";
         if (data.homestay_id) {
-          contentHomestay = `<a title="booking" class="btn icon btn-outline-primary mx-1" onclick="showReservationModal('${data.id}')" data-bs-toggle="modal" data-bs-target="#reservationModal">
+          contentHomestay =
+            '<div class="text-center">' +
+            `<a title="booking" class="btn icon btn-success mx-1 mt-1 btn-sm" onclick="showReservationModal('${data.id}')" data-bs-toggle="modal" data-bs-target="#reservationModal">
     <i class="fa fa-ticket"></i> booking
-</a>`;
+</a>` +
+            "</div>";
         }
 
         if (currentUrl.includes(id)) {
@@ -903,8 +906,6 @@ function showReservationModal(rgId = null) {
     async: false,
     success: function (response) {
       homestayData = response.data;
-
-      console.log(homestayData);
     },
     error: function (err) {
       console.error(err);
@@ -923,10 +924,11 @@ function showReservationModal(rgId = null) {
 
     const galleryItems = homestayData.homestayGalleries || [];
     const homestayName = homestayData.homestay_name || "";
-    console.log("homestayName" + homestayName);
+    const homestayId = homestayData.homestay_id || null;
     const homestayFullName = homestayData?.homestay_name || "";
     const status = homestayData?.status === 1 ? "available" : "not available";
     const price = homestayData?.homestay_price || 0;
+    const formattedPrice = price.toLocaleString("id-ID");
     const address = homestayData?.homestay_address || "";
     const checkin = homestayData?.homestay_checkin || "";
     const checkout = homestayData?.homestay_checkout || "";
@@ -1006,7 +1008,7 @@ function showReservationModal(rgId = null) {
                             </tr>
                             <tr>
                                 <td class="fw-bold">Price / day</td>
-                                <td>Rp ${price.toLocaleString("id-ID")}</td>
+                                <td>Rp ${formattedPrice}</td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Address</td>
@@ -1030,7 +1032,7 @@ function showReservationModal(rgId = null) {
                 <div class="shadow p-4 rounded">
                     <div class="form-group mb-2">
                         <label for="reservation_date" class="mb-2">Reservation date</label>
-                        <input onchange="changeMinDate(this.value)" type="date" id="reservation_date" class="form-control" required>
+                        <input onchange="changeMinDate(this.value)" type="text" id="reservation_date" class="form-control" required>
                     </div>
                     <div class="form-group mb-2" id="reservation_date_end_container"></div>
                     <div class="form-group mb-2">
@@ -1047,19 +1049,19 @@ function showReservationModal(rgId = null) {
 
     // Setup datepicker
     let dateNow = new Date();
-    // $("#reservation_date").datepicker({
-    //   format: "yyyy-mm-dd",
-    //   autoclose: true,
-    //   startDate: new Date(
-    //     dateNow.getFullYear(),
-    //     dateNow.getMonth(),
-    //     dateNow.getDate() + 1
-    //   ),
-    //   todayHighlight: false,
-    // });
+    $("#reservation_date").datepicker({
+      format: "yyyy-mm-dd",
+      autoclose: true,
+      startDate: new Date(
+        dateNow.getFullYear(),
+        dateNow.getMonth(),
+        dateNow.getDate() + 1
+      ),
+      todayHighlight: false,
+    });
 
     $("#modalFooter").html(
-      `<a class="btn btn-success" onclick="makeReservation(${userId},${homestayData})"> Make reservation </a>`
+      `<a class="btn btn-success" onclick="makeReservation('${userId}','${homestayId}',${price})"> Make reservation </a>`
     );
   } else {
     $("#modalTitle").html("Login required");
@@ -1077,16 +1079,14 @@ function changeMinDate(value) {
     valueDate.getMonth(),
     valueDate.getDate() + 3
   );
-  console.log(maxDate);
   $("#reservation_date_end_container").html(`
         <label for="reservation_date_end" class="mb-2"> Until <span class="text-sm text-primary"> ( Max 4 days ) </span> </label>
-        <input type="date" id="reservation_date_end" class="form-control" required >`);
+        <input type="text" id="reservation_date_end" class="form-control" required >`);
 
   let dateNow = new Date();
   let yearNow = dateNow.getFullYear();
   let nextYear = yearNow + 2;
   let yearRange = `${yearNow}:${nextYear}`;
-  console.log(yearRange);
   // date picker
   // let datesForDisable = ["2023-11-08", "2023-11-09", "2023-11-10", "2023-11-11"]
 
@@ -1101,7 +1101,7 @@ function changeMinDate(value) {
   });
 }
 
-function makeReservation(user_id, homestayData) {
+function makeReservation(user_id, homestay_id, price) {
   let reservationDate = $("#reservation_date").val();
   let reservationDateEnd = $("#reservation_date_end").val();
 
@@ -1137,8 +1137,8 @@ function makeReservation(user_id, homestayData) {
     Swal.fire("The date is booked, please select another date", "", "warning");
   } else {
     if (user_id) {
-      let ticketPrice = parseInt(homestayData.ticket_price || 0);
-      let homestayId = homestayData.id;
+      let ticketPrice = parseInt(price || 0);
+      let homestayId = homestay_id;
 
       let totalPrice = ticketPrice * countDate;
 
@@ -1157,13 +1157,11 @@ function makeReservation(user_id, homestayData) {
         url: "/web/reservation/create",
         type: "POST",
         contentType: "application/json",
-        data: JSON.stringify(requestData),
+        data: requestData,
+        async: false,
+        contentType: "application/json",
         success: function (response) {
-          Swal.fire("Success to make reservation request", "", "success").then(
-            () => {
-              window.location.reload();
-            }
-          );
+          Swal.fire("Success to make reservation request", "", "success");
         },
         error: function (err) {
           console.log(err.responseText);
@@ -1194,12 +1192,11 @@ function checkIsDateExpired(reservation_date) {
 function checkIsDateDuplicate(user_id, reservation_date, reservation_date_end) {
   let result;
   $.ajax({
-    url: `<?= base_url('web/reservation') ?>/checkHomestay/${user_id}/${reservation_date}/${reservation_date_end}`,
+    url: `/web/reservation/checkHomestay/${user_id}/${reservation_date}/${reservation_date_end}`,
     type: "GET",
     async: false,
     success: function (response) {
       result = response;
-      console.log(result);
     },
     error: function (err) {
       console.log(err.responseText);

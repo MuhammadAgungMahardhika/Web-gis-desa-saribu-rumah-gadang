@@ -261,7 +261,7 @@
                 <div class="shadow p-4 rounded">
                     <div class="form-group mb-2">
                         <label for="reservation_date" class="mb-2"> Reservation date </label>
-                        <input onchange="changeMinDate(this.value)" type="date" id="reservation_date" class="form-control" required >
+                        <input onchange="changeMinDate(this.value)" type="text" id="reservation_date" class="form-control" required >
                     </div>
                     <div class="form-group mb-2" id="reservation_date_end_container">
                        
@@ -301,7 +301,7 @@
         console.log(maxDate)
         $("#reservation_date_end_container").html(`
         <label for="reservation_date_end" class="mb-2"> Until <span class="text-sm text-primary"> ( Max 4 days ) </span> </label>
-        <input type="date" id="reservation_date_end" class="form-control" required >`)
+        <input type="text" id="reservation_date_end" class="form-control" required >`)
 
         let dateNow = new Date();
         let yearNow = dateNow.getFullYear();
