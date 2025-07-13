@@ -397,7 +397,7 @@ function objectInfoWindow(id) {
           data.ticket_price == 0 ? "Free" : "Rp " + data.ticket_price;
         let open = data.open.substring(0, data.open.length - 3);
         let close = data.close.substring(0, data.close.length - 3);
-
+        console.log(data);
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
@@ -441,9 +441,16 @@ function objectInfoWindow(id) {
           ')"><i class="fa-solid fa-road"></i></a>' +
           "</div>";
 
+        contentHomestay = "";
+        if (data.homestay_id) {
+          contentHomestay = `<a title="booking" class="btn icon btn-outline-primary mx-1" onclick="showReservationModal('${data.id}')" data-bs-toggle="modal" data-bs-target="#reservationModal">
+    <i class="fa fa-ticket"></i> booking
+</a>`;
+        }
+
         if (currentUrl.includes(id)) {
           if (currentUrl.includes("mobile")) {
-            infoWindow.setContent(content + contentMobile);
+            infoWindow.setContent(content + contentMobile + contentHomestay);
           } else {
             infoWindow.setContent(content);
           }
@@ -884,6 +891,323 @@ function displayFoundObject(response) {
     counter++;
   }
 }
+
+// reservation modal
+function showReservationModal(rgId = null) {
+  let userId = UserIdManager.getUserIdFromSessionStorage();
+  console.log(userId);
+  let homestayData = {};
+  $.ajax({
+    url: baseUrl + "/api/rumahGadang/" + rgId,
+    dataType: "json",
+    async: false,
+    success: function (response) {
+      homestayData = response.data;
+
+      console.log(homestayData);
+    },
+    error: function (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load homestay data.",
+      });
+    },
+  });
+  if (userId) {
+    const avgRating = 0;
+    if (homestayData.avg_rating) {
+      avgRating = parseInt(homestayData.avg_rating);
+    }
+
+    const galleryItems = homestayData.homestayGalleries || [];
+    const homestayName = homestayData.homestay_name || "";
+    console.log("homestayName" + homestayName);
+    const homestayFullName = homestayData?.homestay_name || "";
+    const status = homestayData?.status === 1 ? "available" : "not available";
+    const price = homestayData?.homestay_price || 0;
+    const address = homestayData?.homestay_address || "";
+    const checkin = homestayData?.homestay_checkin || "";
+    const checkout = homestayData?.homestay_checkout || "";
+    const contactPerson = homestayData?.homestay_contact_person || "";
+
+    // Rating stars
+    let starsHtml = "";
+    for (let i = 0; i < avgRating; i++) {
+      starsHtml +=
+        '<span class="material-symbols-outlined rating-color">star</span>';
+    }
+    for (let i = 0; i < 5 - avgRating; i++) {
+      starsHtml += '<span class="material-symbols-outlined">star</span>';
+    }
+
+    // Carousel
+    let carouselIndicators = "";
+    let carouselInner = "";
+    galleryItems.forEach((gallery, index) => {
+      carouselIndicators += `
+                <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="${index}" class="${
+        index === 0 ? "active" : ""
+      }"></li>
+            `;
+      carouselInner += `
+                <div class="carousel-item${index === 0 ? " active" : ""}">
+                    <img src="/media/photos/homestay/${
+                      gallery.url
+                    }" class="d-block w-100" alt="${gallery.url}">
+                </div>
+            `;
+    });
+
+    let carouselHtml = "";
+    if (galleryItems.length > 0) {
+      carouselHtml = `
+                <tr>
+                    <td colspan="2">
+                        <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                            <ol class="carousel-indicators">
+                                ${carouselIndicators}
+                            </ol>
+                            <div class="carousel-inner">
+                                ${carouselInner}
+                            </div>
+                            <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+    }
+
+    // Modal content
+    $("#modalTitle").html("Reservation form");
+    $("#modalBody").html(`
+            <div class="p-2">
+                <div class="mb-2 shadow-sm p-4 rounded">
+                    <p class="text-center fw-bold text-dark">Homestay Informations</p>
+                    <div class="text-center">${starsHtml}</div>
+                    <table class="table table-borderless text-dark">
+                        <tbody>
+                            ${carouselHtml}
+                            <tr>
+                                <td class="fw-bold">Homestay Name</td>
+                                <td>${homestayName} (${homestayFullName})</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Status</td>
+                                <td>${status}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Price / day</td>
+                                <td>Rp ${price.toLocaleString("id-ID")}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Address</td>
+                                <td>${address}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Check in Time</td>
+                                <td>${checkin} AM</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Check out Time</td>
+                                <td>${checkout} AM (Next day)</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Contact Person</td>
+                                <td>${contactPerson}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="shadow p-4 rounded">
+                    <div class="form-group mb-2">
+                        <label for="reservation_date" class="mb-2">Reservation date</label>
+                        <input onchange="changeMinDate(this.value)" type="date" id="reservation_date" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-2" id="reservation_date_end_container"></div>
+                    <div class="form-group mb-2">
+                        <label for="number_people" class="mb-2">Number of people</label>
+                        <input type="number" id="number_people" value="0" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="comment" class="mb-2">Additional information</label>
+                        <input type="text" id="comment" class="form-control">
+                    </div>
+                </div>
+            </div>
+        `);
+
+    // Setup datepicker
+    let dateNow = new Date();
+    // $("#reservation_date").datepicker({
+    //   format: "yyyy-mm-dd",
+    //   autoclose: true,
+    //   startDate: new Date(
+    //     dateNow.getFullYear(),
+    //     dateNow.getMonth(),
+    //     dateNow.getDate() + 1
+    //   ),
+    //   todayHighlight: false,
+    // });
+
+    $("#modalFooter").html(
+      `<a class="btn btn-success" onclick="makeReservation(${userId},${homestayData})"> Make reservation </a>`
+    );
+  } else {
+    $("#modalTitle").html("Login required");
+    $("#modalBody").html("Login as user for reservation");
+    $("#modalFooter").html(
+      `<a class="btn btn-primary" href="/login"> Login </a> <a class="btn btn-primary" href="/register"> Register </a>`
+    );
+  }
+}
+
+function changeMinDate(value) {
+  let valueDate = new Date(value);
+  let maxDate = new Date(
+    valueDate.getFullYear(),
+    valueDate.getMonth(),
+    valueDate.getDate() + 3
+  );
+  console.log(maxDate);
+  $("#reservation_date_end_container").html(`
+        <label for="reservation_date_end" class="mb-2"> Until <span class="text-sm text-primary"> ( Max 4 days ) </span> </label>
+        <input type="date" id="reservation_date_end" class="form-control" required >`);
+
+  let dateNow = new Date();
+  let yearNow = dateNow.getFullYear();
+  let nextYear = yearNow + 2;
+  let yearRange = `${yearNow}:${nextYear}`;
+  console.log(yearRange);
+  // date picker
+  // let datesForDisable = ["2023-11-08", "2023-11-09", "2023-11-10", "2023-11-11"]
+
+  $("#reservation_date_end").datepicker({
+    format: "yyyy-mm-dd",
+    autoclose: true,
+    yearRange: yearRange,
+    startDate: valueDate,
+    endDate: maxDate,
+    defaultViewDate: valueDate,
+    // datesDisabled: datesForDisable
+  });
+}
+
+function makeReservation(user_id, homestayData) {
+  let reservationDate = $("#reservation_date").val();
+  let reservationDateEnd = $("#reservation_date_end").val();
+
+  let startDate = new Date(reservationDate).getDate();
+  let endDate = new Date(reservationDateEnd).getDate();
+  let countDate = endDate - startDate + 1;
+
+  let numberPeople = $("#number_people").val();
+  let comment = $("#comment").val();
+
+  let dateCheckResult = checkIsDateExpired(reservationDate);
+  let sameDateCheckResult = "true";
+
+  if (reservationDate) {
+    sameDateCheckResult = checkIsDateDuplicate(
+      user_id,
+      reservationDate,
+      reservationDateEnd
+    );
+  }
+
+  if (!reservationDate) {
+    Swal.fire("Please select reservation date", "", "warning");
+  } else if (numberPeople <= 0) {
+    Swal.fire("Need 1 people at least", "", "warning");
+  } else if (dateCheckResult === false) {
+    Swal.fire(
+      "Cannot reserve, out of date. Maximum is H-1 before reservation",
+      "",
+      "warning"
+    );
+  } else if (sameDateCheckResult === "true") {
+    Swal.fire("The date is booked, please select another date", "", "warning");
+  } else {
+    if (user_id) {
+      let ticketPrice = parseInt(homestayData.ticket_price || 0);
+      let homestayId = homestayData.id;
+
+      let totalPrice = ticketPrice * countDate;
+
+      let requestData = {
+        reservation_date: reservationDate,
+        reservation_date_end: reservationDateEnd,
+        id_user: user_id,
+        id_homestay: homestayId,
+        id_reservation_status: 1, // Pending status
+        number_people: numberPeople,
+        total_price: totalPrice,
+        comment: comment,
+      };
+
+      $.ajax({
+        url: "/web/reservation/create",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(requestData),
+        success: function (response) {
+          Swal.fire("Success to make reservation request", "", "success").then(
+            () => {
+              window.location.reload();
+            }
+          );
+        },
+        error: function (err) {
+          console.log(err.responseText);
+        },
+      });
+    }
+  }
+}
+
+function checkIsDateExpired(reservation_date) {
+  let result;
+
+  let today = new Date();
+  let dd = String(today.getDate()).padStart(2, "0");
+  let mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+  let yyyy = today.getFullYear();
+
+  today = yyyy + "-" + mm + "-" + dd;
+
+  if (reservation_date > today) {
+    result = true;
+  } else {
+    result = false;
+  }
+  return result;
+}
+
+function checkIsDateDuplicate(user_id, reservation_date, reservation_date_end) {
+  let result;
+  $.ajax({
+    url: `<?= base_url('web/reservation') ?>/checkHomestay/${user_id}/${reservation_date}/${reservation_date_end}`,
+    type: "GET",
+    async: false,
+    success: function (response) {
+      result = response;
+      console.log(result);
+    },
+    error: function (err) {
+      console.log(err.responseText);
+    },
+  });
+  return result;
+}
+// end reservation modal
 
 // display steps of direction to selected route
 function showSteps(directionResult) {

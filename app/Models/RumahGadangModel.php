@@ -120,12 +120,13 @@ class RumahGadangModel extends Model
     public function get_rg_by_id_api($id = null)
     {
         //$coords = "ST_Y(ST_Centroid({$this->table}.geom)) AS lat, ST_X(ST_Centroid({$this->table}.geom)) AS lng";
-        $columns = "{$this->table}.id_rumah_gadang as id,{$this->table}.name,{$this->table}.address,{$this->table}.open,{$this->table}.close,{$this->table}.price_ticket as ticket_price,{$this->table}.cp as contact_person,{$this->table}.id_homestay,{$this->table}.id_recommendation,{$this->table}.id_user,{$this->table}.description,{$this->table}.video_url";
+        $columns = "{$this->table}.id_rumah_gadang as id,{$this->table}.name,{$this->table}.address,{$this->table}.open,{$this->table}.close,{$this->table}.price_ticket as ticket_price,{$this->table}.cp as contact_person,{$this->table}.id_homestay,{$this->table}.id_recommendation,{$this->table}.id_user,{$this->table}.description,{$this->table}.video_url, homestay.id as homestay_id, homestay.price as homestay_price, homestay.name as homestay_name, homestay.address as homestay_address";
         $geoJson = "ST_AsGeoJSON({$this->table}.geom) AS geoJson";
         $vilGeom = "regional.id_regional = '1' AND ST_Contains(regional.geom, {$this->table}.geom)";
         $query = $this->db->table($this->table)
             ->select("{$columns}, rumah_gadang.lat, rumah_gadang.lng, {$geoJson}")
             ->from('regional')
+            ->join('homestay', 'rumah_gadang.id_homestay = homestay.id', 'left')
             ->where('rumah_gadang.id_rumah_gadang', $id)
             ->where($vilGeom)
             ->get();
@@ -141,6 +142,7 @@ class RumahGadangModel extends Model
         $query = $this->db->table($this->table)
             ->select("{$columns}, rumah_gadang.lat, rumah_gadang.lng, {$geoJson}")
             ->from('regional')
+            ->join('homestay', 'rumah_gadang.id_homestay = homestay.id_homestay')
             ->where('rumah_gadang.id_homestay', $id)
             ->where($vilGeom)
             ->get();

@@ -65,6 +65,7 @@ class RumahGadang extends ResourceController
     {
         $rumahGadang = $this->rumahGadangModel->get_rg_by_id_api($id)->getRowArray();
 
+
         $list_gallery = $this->galleryRumahGadangModel->get_gallery_api($id)->getResultArray();
         $galleries = array();
         foreach ($list_gallery as $gallery) {
@@ -84,6 +85,7 @@ class RumahGadang extends ResourceController
         $rumahGadang['gallery'] = $galleries;
         $rumahGadang['avg_rating'] = $avg_rating;
         $rumahGadang['reviews'] = $list_review;
+
 
         $response = [
             'data' => $rumahGadang,

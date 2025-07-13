@@ -58,6 +58,8 @@ $routes->group('mobile', ['namespace' => 'App\Controllers\Mobile'], function ($r
     $routes->get('rumahGadang/maps', 'RumahGadang::maps');
     $routes->get('rumahGadang/(:segment)', 'RumahGadang::detail/$1');
 
+    // homestay
+    $routes->get('homeStay/(:segment)', 'Homestay::detail/$1');
     $routes->get('package/', 'Package::index');
     $routes->get('package/(:segment)', 'Package::show/$1');
     $routes->get('package/maps/(:segment)', 'Package::maps/$1');
@@ -167,6 +169,7 @@ $routes->group('dashboard', ['namespace' => 'App\Controllers\Web', 'filter' => '
 // API
 $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
     $routes->resource('rumahGadang');
+    $routes->resource('homeStay');
     $routes->get('recommendation', 'RumahGadang::recommendation');
     $routes->post('recommendationOwner', 'RumahGadang::recommendationByOwner');
     $routes->get('recommendationList', 'RumahGadang::recommendationList');
