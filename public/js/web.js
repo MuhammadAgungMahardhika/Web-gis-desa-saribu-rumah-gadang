@@ -439,6 +439,13 @@ function objectInfoWindow(id) {
           ", " +
           lng +
           ')"><i class="fa-solid fa-road"></i></a>' +
+          '<a title="Nearby" class="btn icon btn-outline-primary mx-1" id="nearbyInfoWindow" onclick="openNearbyMobile(`' +
+          rgid +
+          "`," +
+          lat +
+          "," +
+          lng +
+          ')"><i class="fa-solid fa-compass"></i></a>' +
           "</div>";
 
         contentHomestay = "";
@@ -744,8 +751,14 @@ function drawRadius(position, radius) {
 
 // Update radiusValue on search by radius
 function updateRadius(postfix) {
+  console.log(postfix);
   document.getElementById("radiusValue" + postfix).innerHTML =
     document.getElementById("inputRadius" + postfix).value * 100 + " m";
+}
+
+function updateRadiusMobile() {
+  document.getElementById("radiusValueNearbyMobile").innerHTML =
+    document.getElementById("inputRadiusNearbyMobile").value * 100 + " m";
 }
 
 // Render search by radius
@@ -1066,9 +1079,6 @@ function showReservationModal(rgId = null) {
   } else {
     $("#modalTitle").html("Login required");
     $("#modalBody").html("Login as user for reservation");
-    $("#modalFooter").html(
-      `<a class="btn btn-primary" href="/login"> Login </a> <a class="btn btn-primary" href="/register"> Register </a>`
-    );
   }
 }
 
@@ -1239,6 +1249,22 @@ function closeNearby() {
 }
 
 // open nearby search section
+function openNearbyMobile(id, lat, lng) {
+  $("#check-nearby-col").show();
+  currentLat = lat;
+  currentLng = lng;
+  let pos = new google.maps.LatLng(currentLat, currentLng);
+  map.panTo(pos);
+
+  document
+    .getElementById("inputRadiusNearbyMobile")
+    .setAttribute(
+      "onchange",
+      'updateRadiusMobile(); checkNearbyMobile("' + id + '")'
+    );
+}
+
+// open nearby search section
 function openNearby(id, lat, lng) {
   $("#list-rg-col").hide();
   $("#list-ev-col").hide();
@@ -1258,8 +1284,31 @@ function openNearby(id, lat, lng) {
       'updateRadius("Nearby"); checkNearby("' + id + '")'
     );
 }
-
 // Search Result Object Around
+function checkNearbyMobile(id) {
+  clearRadius();
+  clearRoute();
+  clearMarker();
+  clearUser();
+  destinationMarker.setMap(null);
+  google.maps.event.clearListeners(map, "click");
+
+  objectMarker(id, currentLat, currentLng, false);
+
+  const inputRadius = document.getElementById("inputRadiusNearbyMobile");
+  if (!inputRadius) {
+    Swal.fire("Input radius tidak ditemukan!", "", "error");
+    return;
+  }
+
+  let radiusValue = parseFloat(inputRadius.value) * 100;
+  findNearby("cp", radiusValue);
+  findNearby("wp", radiusValue);
+  findNearby("sp", radiusValue);
+  findNearby("at", radiusValue);
+  drawRadius(new google.maps.LatLng(currentLat, currentLng), radiusValue);
+  $("#result-nearby-col").show();
+}
 function checkNearby(id) {
   clearRadius();
   clearRoute();

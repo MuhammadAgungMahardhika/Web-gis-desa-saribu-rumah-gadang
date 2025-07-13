@@ -56,20 +56,23 @@
             <!-- End Sidebar -->
         <?php endif; ?>
         <!-- Main -->
-        <div id="main">
-            <?php if (isset($currentUrl) != 'mobile'): ?>
+        <?php if (isset($currentUrl) != 'mobile'): ?>
+            <div id="main">
                 <?= $this->include('web/layouts/header'); ?>
-            <?php endif; ?>
+                <!-- Content -->
+                <?= $this->renderSection('content') ?>
+                <!-- End Content -->
+                <!-- Footer -->
+                <?= $this->include('web/layouts/footer') ?>
+                <!-- End Footer -->
+            </div>
+        <?php else: ?>
+
             <!-- Content -->
             <?= $this->renderSection('content') ?>
             <!-- End Content -->
+        <?php endif; ?>
 
-            <!-- Footer -->
-            <?php if (isset($currentUrl) != 'mobile'): ?>
-                <?= $this->include('web/layouts/footer') ?>
-            <?php endif; ?>
-            <!-- End Footer -->
-        </div>
         <!-- End Main -->
 
     </div>

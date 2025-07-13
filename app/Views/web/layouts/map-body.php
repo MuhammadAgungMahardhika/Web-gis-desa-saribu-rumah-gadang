@@ -1,4 +1,5 @@
 <div class="card-body">
+
     <div class="googlemaps" id="googlemaps"></div>
     <script>
         initMap();
@@ -11,4 +12,5 @@
         $('#legend').hide();
         getLegend();
     </script>
+
 </div>

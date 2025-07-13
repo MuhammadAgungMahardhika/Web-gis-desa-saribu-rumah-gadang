@@ -25,8 +25,16 @@
     </div>
 </div>
 
+<div class="card-body">
+    <div class="mt-3" id="check-nearby-col">
+        <label for="inputRadiusNearbyMobile" class="form-label">Radius: </label>
+        <label id="radiusValueNearbyMobile" class="form-label">0 m</label>
+        <input type="range" class="form-range" min="0" max="20" value="0" id="inputRadiusNearbyMobile" name="inputRadiusNearbyMobile" onchange="updateRadiusMobile();">
+    </div>
+</div>
 <?= $this->include('web/layouts/map-body'); ?>
 <script>
+    $("#check-nearby-col").hide();
     UserIdManager.saveUserIdToSessionStorage('<?= user_id(); ?>')
     console.log('<?= user_id(); ?>')
     currentUrl = '<?= $currentUrl ?>';
