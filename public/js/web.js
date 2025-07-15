@@ -17,7 +17,7 @@ let bounds = new google.maps.LatLngBounds();
 let selectedShape,
   drawingManager = new google.maps.drawing.DrawingManager();
 let geomAreaArray = [];
-
+let routePoints = []; // to store route points
 let customStyled = [
   {
     elementType: "labels",
@@ -186,6 +186,17 @@ function clearRoute() {
   $("#direction-row").hide();
 }
 
+function clearRouteAll() {
+  for (let i = 0; i < routeArray.length; i++) {
+    if (routeArray[i]) {
+      routeArray[i].setMap(null);
+    }
+  }
+  routeArray = [];
+  routePoints = []; // Pastikan ini benar-benar reset
+  $("#direction-row").hide();
+}
+
 // Remove any radius shown
 function clearRadius() {
   for (i in circleArray) {
@@ -327,6 +338,54 @@ function routeTo(lat, lng, routeFromUser = true) {
   boundToRoute(start, end);
 }
 
+function routeAll(lat, lng, routeFromUser = true) {
+  console.log("routeAll");
+
+  if (routeFromUser && routePoints.length === 0) {
+    if (userLat == 0 && userLng == 0) {
+      return Swal.fire("Determine your position first!");
+    }
+    setUserLoc(userLat, userLng);
+    routePoints.push(new google.maps.LatLng(userLat, userLng));
+  }
+
+  routePoints.push(new google.maps.LatLng(lat, lng));
+
+  if (routePoints.length < 2) {
+    return;
+  }
+
+  const origin = routePoints[0];
+  const destination = routePoints[routePoints.length - 1];
+  const waypoints = routePoints
+    .slice(1, -1)
+    .map((point) => ({ location: point, stopover: true }));
+
+  let request = {
+    origin: origin,
+    destination: destination,
+    travelMode: google.maps.TravelMode.DRIVING,
+    waypoints: waypoints,
+    optimizeWaypoints: false,
+  };
+
+  directionsService.route(request, function (result, status) {
+    if (status === google.maps.DirectionsStatus.OK) {
+      if (!directionsRenderer) {
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+      }
+      directionsRenderer.setDirections(result);
+      showSteps(result);
+
+      // Kalau kamu ingin simpan setiap directionsRenderer terpisah (tidak perlu sebenarnya),
+      // kamu bisa push directionsRenderer ke routeArray, tapi biasanya cukup 1 saja.
+      // routeArray.push(directionsRenderer);
+    } else {
+      console.error("Directions request failed due to " + status);
+    }
+  });
+}
 // Display marker for loaded object
 function objectMarker(id, lat, lng, anim = true) {
   google.maps.event.clearListeners(map, "click");
@@ -434,11 +493,17 @@ function objectInfoWindow(id) {
           "</div>";
         contentMobile =
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-outline-primary mx-1 btn-sm" id="routeInfoWindow" onclick="routeTo(' +
+          '<a title="Route" class="btn icon btn-outline-primary mx-1 btn-sm" id="routeInfoWindow" onclick="route(' +
           lat +
           ", " +
           lng +
           ')"><i class="fa-solid fa-road"></i></a>' +
+          '<div class="text-center">' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          lat +
+          ", " +
+          lng +
+          ')"><i class="fa-solid fa-plus"></i></a>' +
           '<a title="Nearby" class="btn icon btn-outline-primary mx-1" id="nearbyInfoWindow" onclick="openNearbyMobile(`' +
           rgid +
           "`," +
@@ -626,13 +691,20 @@ function objectInfoWindow(id) {
       success: function (response) {
         let data = response.data;
         let name = data.name;
-
+        let lat = data.lat;
+        let lng = data.lng;
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
           name +
           "</p>" +
-          "</div>";
+          "</div>" +
+          '<div class="text-center">' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          lat +
+          ", " +
+          lng +
+          ')"><i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -644,13 +716,20 @@ function objectInfoWindow(id) {
       success: function (response) {
         let data = response.data;
         let name = data.name;
-
+        let lat = data.lat;
+        let lng = data.lng;
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
           name +
           "</p>" +
-          "</div>";
+          "</div>" +
+          '<div class="text-center">' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          lat +
+          ", " +
+          lng +
+          ')"><i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -662,13 +741,20 @@ function objectInfoWindow(id) {
       success: function (response) {
         let data = response.data;
         let name = data.name;
-
+        let lat = data.lat;
+        let lng = data.lng;
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
           name +
           "</p>" +
-          "</div>";
+          "</div>" +
+          '<div class="text-center">' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          lat +
+          ", " +
+          lng +
+          ')"><i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -680,13 +766,20 @@ function objectInfoWindow(id) {
       success: function (response) {
         let data = response.data;
         let name = data.name;
-
+        let lat = data.lat;
+        let lng = data.lng;
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
           name +
           "</p>" +
-          "</div>";
+          "</div>" +
+          '<div class="text-center">' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          lat +
+          ", " +
+          lng +
+          ')"><i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -1256,6 +1349,8 @@ function openNearbyMobile(id, lat, lng) {
   let pos = new google.maps.LatLng(currentLat, currentLng);
   map.panTo(pos);
 
+  setUserLoc(currentLat, currentLng);
+  console.log("openNearbyMobile", currentLat, currentLng);
   document
     .getElementById("inputRadiusNearbyMobile")
     .setAttribute(
@@ -1276,7 +1371,8 @@ function openNearby(id, lat, lng) {
   currentLng = lng;
   let pos = new google.maps.LatLng(currentLat, currentLng);
   map.panTo(pos);
-
+  setUserLoc(currentLat, currentLng);
+  console.log("openNearby", currentLat, currentLng);
   document
     .getElementById("inputRadiusNearby")
     .setAttribute(
@@ -1286,10 +1382,12 @@ function openNearby(id, lat, lng) {
 }
 // Search Result Object Around
 function checkNearbyMobile(id) {
+  console.log("checkNearbyMobile", id, currentLat, currentLng);
   clearRadius();
   clearRoute();
+  // clearRouteAll();
   clearMarker();
-  clearUser();
+  // clearUser();
   destinationMarker.setMap(null);
   google.maps.event.clearListeners(map, "click");
 
@@ -1310,10 +1408,11 @@ function checkNearbyMobile(id) {
   $("#result-nearby-col").show();
 }
 function checkNearby(id) {
+  console.log("checkNearby", id, currentLat, currentLng);
   clearRadius();
   clearRoute();
   clearMarker();
-  clearUser();
+  // clearUser();
   destinationMarker.setMap(null);
   google.maps.event.clearListeners(map, "click");
 

@@ -55,7 +55,7 @@ class CulinaryPlace extends ResourceController
         foreach ($list_gallery as $gallery) {
             $galleries[] = $gallery['url'];
         }
-        
+
         $culinary_place['gallery'] = $galleries;
 
         $response = [
@@ -66,7 +66,6 @@ class CulinaryPlace extends ResourceController
             ]
         ];
         return $this->respond($response);
-
     }
 
     /**
@@ -112,7 +111,7 @@ class CulinaryPlace extends ResourceController
         $addVideo = $this->videoCulinaryPlaceModel->add_video_api($id, array($video));
         $menus = $request['menus'];
         $addMenu = $this->detailMenuModel->add_menu_api($id, $menus);
-        if($addCP && $addFacilities && $addGallery && $addVideo && $addMenu) {
+        if ($addCP && $addFacilities && $addGallery && $addVideo && $addMenu) {
             $response = [
                 'status' => 201,
                 'message' => [
@@ -177,7 +176,7 @@ class CulinaryPlace extends ResourceController
         $updateVideo = $this->videoCulinaryPlaceModel->update_video_api($id, array($video));
         $menus = $request['menus'];
         $updateMenu = $this->detailMenuModel->update_menu_api($id, $menus);
-        if($updateCP && $updateFacilities && $updateGallery && $updateVideo && $updateMenu) {
+        if ($updateCP && $updateFacilities && $updateGallery && $updateVideo && $updateMenu) {
             $response = [
                 'status' => 201,
                 'message' => [
@@ -209,7 +208,7 @@ class CulinaryPlace extends ResourceController
     public function delete($id = null)
     {
         $deleteCP = $this->culinaryPlaceModel->delete(['id' => $id]);
-        if($deleteCP) {
+        if ($deleteCP) {
             $response = [
                 'status' => 200,
                 'message' => [
@@ -227,7 +226,7 @@ class CulinaryPlace extends ResourceController
             return $this->failNotFound($response);
         }
     }
-    
+
     public function findByRadius()
     {
         $request = $this->request->getPost();
