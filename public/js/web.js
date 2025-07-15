@@ -8,6 +8,7 @@ let web, map;
 let infoWindow = new google.maps.InfoWindow();
 let userInfoWindow = new google.maps.InfoWindow();
 let directionsService, directionsRenderer;
+let directionsServiceAll, directionsRendererAll;
 let userMarker = new google.maps.Marker();
 let destinationMarker = new google.maps.Marker();
 let routeArray = [];
@@ -62,6 +63,7 @@ function setBaseUrl(url) {
 
 function initMap(lat = -1.483815, lng = 101.05896, mobile = false) {
   directionsService = new google.maps.DirectionsService();
+  directionsServiceAll = new google.maps.DirectionsService();
   const center = new google.maps.LatLng(lat, lng);
   if (!mobile) {
     map = new google.maps.Map(document.getElementById("googlemaps"), {
@@ -187,14 +189,35 @@ function clearRoute() {
 }
 
 function clearRouteAll() {
-  for (let i = 0; i < routeArray.length; i++) {
-    if (routeArray[i]) {
-      routeArray[i].setMap(null);
+  Swal.fire({
+    title: "Reset Semua Rute?",
+    text: "Tindakan ini akan menghapus semua titik dan rute dari peta.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Ya, reset",
+    cancelButtonText: "Batal",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      console.log("Clearing all routes...");
+
+      // Hapus renderer dari peta
+      if (directionsRendererAll) {
+        directionsRendererAll.setMap(null);
+        directionsRendererAll = null;
+      }
+
+      // Kosongkan array titik-titik rute
+      routePoints = [];
+
+      // Kosongkan isi tabel
+      const tbody = document.getElementById("routeTableBody");
+      if (tbody) {
+        tbody.innerHTML = "";
+      }
+
+      console.log("All routes cleared.");
     }
-  }
-  routeArray = [];
-  routePoints = []; // Pastikan ini benar-benar reset
-  $("#direction-row").hide();
+  });
 }
 
 // Remove any radius shown
@@ -338,9 +361,15 @@ function routeTo(lat, lng, routeFromUser = true) {
   boundToRoute(start, end);
 }
 
-function routeAll(lat, lng, routeFromUser = true) {
+function routeAll(lat, lng, routeFromUser = true, id = null, name = null) {
   console.log("routeAll");
+  console.log("routeFromUser: ", routeFromUser);
+  console.log("lat: ", lat);
+  console.log("lng: ", lng);
+  console.log("id: ", id);
+  console.log("name: ", name);
 
+  // Validasi user location jika titik awal
   if (routeFromUser && routePoints.length === 0) {
     if (userLat == 0 && userLng == 0) {
       return Swal.fire("Determine your position first!");
@@ -349,43 +378,176 @@ function routeAll(lat, lng, routeFromUser = true) {
     routePoints.push(new google.maps.LatLng(userLat, userLng));
   }
 
+  // Tambahkan titik ke array rute
   routePoints.push(new google.maps.LatLng(lat, lng));
 
-  if (routePoints.length < 2) {
-    return;
-  }
+  // Jangan lanjut jika titik kurang dari dua
+  if (routePoints.length < 2) return;
 
+  // Siapkan permintaan rute
   const origin = routePoints[0];
   const destination = routePoints[routePoints.length - 1];
-  const waypoints = routePoints
-    .slice(1, -1)
-    .map((point) => ({ location: point, stopover: true }));
+  const waypoints = routePoints.slice(1, -1).map((point) => ({
+    location: point,
+    stopover: true,
+  }));
 
-  let request = {
-    origin: origin,
-    destination: destination,
+  const request = {
+    origin,
+    destination,
     travelMode: google.maps.TravelMode.DRIVING,
-    waypoints: waypoints,
+    waypoints,
     optimizeWaypoints: false,
   };
 
-  directionsService.route(request, function (result, status) {
+  // Panggil Google Maps API untuk rute
+  directionsServiceAll.route(request, function (result, status) {
     if (status === google.maps.DirectionsStatus.OK) {
-      if (!directionsRenderer) {
-        directionsRenderer = new google.maps.DirectionsRenderer();
-        directionsRenderer.setMap(map);
+      if (!directionsRendererAll) {
+        directionsRendererAll = new google.maps.DirectionsRenderer();
+        directionsRendererAll.setMap(map);
       }
-      directionsRenderer.setDirections(result);
+      directionsRendererAll.setDirections(result);
       showSteps(result);
-
-      // Kalau kamu ingin simpan setiap directionsRenderer terpisah (tidak perlu sebenarnya),
-      // kamu bisa push directionsRenderer ke routeArray, tapi biasanya cukup 1 saja.
-      // routeArray.push(directionsRenderer);
     } else {
       console.error("Directions request failed due to " + status);
     }
   });
+
+  // Tampilkan modal khusus routeAll
+  const modalBody = document.getElementById("routeAllModalBody");
+  const modalFooter = document.getElementById("routeAllModalFooter");
+
+  // Buat tabel kalau belum ada
+  if (!document.getElementById("routeTable")) {
+    modalBody.innerHTML = `
+      <div class="table-responsive">
+        <table class="table table-bordered" id="routeTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Name</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="routeTableBody"></tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Tambahkan baris jika belum ada
+  if (id && name) {
+    const tbody = document.getElementById("routeTableBody");
+    if (!document.getElementById("route-row-" + id)) {
+      const row = document.createElement("tr");
+      row.id = "route-row-" + id;
+      const rowCount = tbody.rows.length + 1;
+      row.innerHTML = `
+        <td>${rowCount}</td>
+        <td>${name}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="removeRoutePoint('${id}', ${lat}, ${lng})">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    }
+  }
+
+  // Tambahkan tombol reset jika belum ada
+  if (!document.getElementById("resetRouteButton")) {
+    const resetBtn = document.createElement("button");
+    resetBtn.id = "resetRouteButton";
+    resetBtn.className = "btn btn-danger";
+    resetBtn.innerHTML = `<i class="fa fa-trash"></i> Reset Semua`;
+    resetBtn.onclick = clearRouteAll;
+    modalFooter.appendChild(resetBtn);
+  }
+
+  // Tampilkan modal routeAll
+  const modal = new bootstrap.Modal(document.getElementById("routeAllModal"));
+  modal.show();
 }
+
+function removeRoutePoint(id, lat, lng) {
+  console.log(`Removing route point: id=${id}, lat=${lat}, lng=${lng}`);
+
+  // Hapus baris tabel
+  const row = document.getElementById("route-row-" + id);
+  if (row) row.remove();
+
+  // Hapus titik dari array routePoints
+  const index = routePoints.findIndex(
+    (point) => point.lat() === lat && point.lng() === lng
+  );
+  if (index !== -1) {
+    routePoints.splice(index, 1);
+  }
+
+  // Perbarui nomor urut tabel
+  updateRouteTableNumbering();
+
+  // Perbarui rute atau hapus dari peta jika tidak cukup titik
+  if (routePoints.length >= 2) {
+    const origin = routePoints[0];
+    const destination = routePoints[routePoints.length - 1];
+    const waypoints = routePoints.slice(1, -1).map((point) => ({
+      location: point,
+      stopover: true,
+    }));
+
+    const request = {
+      origin,
+      destination,
+      travelMode: google.maps.TravelMode.DRIVING,
+      waypoints,
+      optimizeWaypoints: false,
+    };
+
+    directionsServiceAll.route(request, function (result, status) {
+      if (status === google.maps.DirectionsStatus.OK) {
+        if (!directionsRendererAll) {
+          directionsRendererAll = new google.maps.DirectionsRenderer();
+          directionsRendererAll.setMap(map);
+        }
+        directionsRendererAll.setDirections(result);
+        showSteps(result);
+      }
+    });
+  } else {
+    // Hapus rute dari peta jika tidak ada cukup titik
+    if (directionsRendererAll) {
+      directionsRendererAll.setMap(null);
+      directionsRendererAll = null;
+    }
+
+    // Hapus tabel dan tombol jika kosong
+    const tbody = document.getElementById("routeTableBody");
+    if (tbody && tbody.rows.length === 0) {
+      const table = document.getElementById("routeTable");
+      if (table) table.remove();
+
+      const resetBtn = document.getElementById("resetRouteButton");
+      if (resetBtn) resetBtn.remove();
+
+      // Tutup modal jika kosong total
+      const modalElement = document.getElementById("routeAllModal");
+      const modalInstance = bootstrap.Modal.getInstance(modalElement);
+      if (modalInstance) modalInstance.hide();
+    }
+  }
+}
+
+function updateRouteTableNumbering() {
+  const tbody = document.getElementById("routeTableBody");
+  if (!tbody) return;
+  [...tbody.rows].forEach((row, index) => {
+    row.cells[0].textContent = index + 1;
+  });
+}
+
 // Display marker for loaded object
 function objectMarker(id, lat, lng, anim = true) {
   google.maps.event.clearListeners(map, "click");
@@ -493,17 +655,23 @@ function objectInfoWindow(id) {
           "</div>";
         contentMobile =
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-outline-primary mx-1 btn-sm" id="routeInfoWindow" onclick="route(' +
+          '<a title="Route" class="btn icon btn-outline-primary mx-1 btn-sm" id="routeInfoWindow" onclick="routeTo(' +
           lat +
           ", " +
           lng +
           ')"><i class="fa-solid fa-road"></i></a>' +
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" ' +
+          'onclick="routeAll(' +
           lat +
           ", " +
           lng +
-          ')"><i class="fa-solid fa-plus"></i></a>' +
+          ", true, '" +
+          rgid +
+          "', '" +
+          name +
+          "')\">" +
+          '<i class="fa-solid fa-plus"></i></a>' +
           '<a title="Nearby" class="btn icon btn-outline-primary mx-1" id="nearbyInfoWindow" onclick="openNearbyMobile(`' +
           rgid +
           "`," +
@@ -700,11 +868,17 @@ function objectInfoWindow(id) {
           "</p>" +
           "</div>" +
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" ' +
+          'onclick="routeAll(' +
           lat +
           ", " +
           lng +
-          ')"><i class="fa-solid fa-plus"></i></a>';
+          ", true, '" +
+          id +
+          "', '" +
+          name +
+          "')\">" +
+          '<i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -725,11 +899,17 @@ function objectInfoWindow(id) {
           "</p>" +
           "</div>" +
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" ' +
+          'onclick="routeAll(' +
           lat +
           ", " +
           lng +
-          ')"><i class="fa-solid fa-plus"></i></a>';
+          ", true, '" +
+          id +
+          "', '" +
+          name +
+          "')\">" +
+          '<i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -750,11 +930,17 @@ function objectInfoWindow(id) {
           "</p>" +
           "</div>" +
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" ' +
+          'onclick="routeAll(' +
           lat +
           ", " +
           lng +
-          ')"><i class="fa-solid fa-plus"></i></a>';
+          ", true, '" +
+          id +
+          "', '" +
+          name +
+          "')\">" +
+          '<i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -775,11 +961,17 @@ function objectInfoWindow(id) {
           "</p>" +
           "</div>" +
           '<div class="text-center">' +
-          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" onclick="routeAll(' +
+          '<a title="Route" class="btn icon btn-success mx-1 btn-sm" id="routeInfoWindow" ' +
+          'onclick="routeAll(' +
           lat +
           ", " +
           lng +
-          ')"><i class="fa-solid fa-plus"></i></a>';
+          ", true, '" +
+          id +
+          "', '" +
+          name +
+          "')\">" +
+          '<i class="fa-solid fa-plus"></i></a>';
 
         infoWindow.setContent(content);
       },
@@ -999,6 +1191,44 @@ function displayFoundObject(response) {
     objectMarker(item.id, item.lat, item.lng);
     counter++;
   }
+}
+
+function showRouteAllModal() {
+  const modalBody = document.getElementById("routeAllModalBody");
+  const modalFooter = document.getElementById("routeAllModalFooter");
+
+  // Buat tabel kalau belum ada
+  if (!document.getElementById("routeTable")) {
+    modalBody.innerHTML = `
+      <div class="table-responsive">
+        <table class="table table-bordered" id="routeTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="routeTableBody">
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Tambahkan tombol Reset jika belum ada
+  if (!document.getElementById("resetRouteButton")) {
+    const resetBtn = document.createElement("button");
+    resetBtn.id = "resetRouteButton";
+    resetBtn.className = "btn btn-danger";
+    resetBtn.innerHTML = `<i class="fa fa-trash"></i> Reset Semua`;
+    resetBtn.onclick = clearRouteAll;
+    modalFooter.appendChild(resetBtn);
+  }
+
+  // Tampilkan modal
+  const modal = new bootstrap.Modal(document.getElementById("routeAllModal"));
+  modal.show();
 }
 
 // reservation modal
