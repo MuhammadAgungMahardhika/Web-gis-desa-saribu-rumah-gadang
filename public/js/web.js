@@ -622,7 +622,7 @@ function objectInfoWindow(id) {
         content =
           '<div class="text-center">' +
           '<p class="fw-bold fs-6">' +
-          name +
+          `<a title="booking"  onclick="showRumahGadangDetailModal('${rgid}')" data-bs-toggle="modal" data-bs-target="#reservationModal"> ${name}</a>` +
           "</p>" +
           '<p><i class="fa-solid fa-clock me-2"></i> ' +
           open +
@@ -1403,6 +1403,139 @@ function showReservationModal(rgId = null) {
     $("#modalTitle").html("Login required");
     $("#modalBody").html("Login as user for reservation");
   }
+}
+
+function showRumahGadangDetailModal(rgId = null) {
+  let rumahGadangData = {};
+  $.ajax({
+    url: baseUrl + "/api/rumahGadang/" + rgId,
+    dataType: "json",
+    async: false,
+    success: function (response) {
+      rumahGadangData = response.data;
+    },
+    error: function (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to load Rumah Gadang data.",
+      });
+    },
+  });
+
+  if (!rumahGadangData) return;
+
+  const avgRating = parseInt(rumahGadangData.avg_rating || 0);
+
+  let starsHtml = "";
+  for (let i = 0; i < avgRating; i++) {
+    starsHtml +=
+      '<span class="material-symbols-outlined rating-color">star</span>';
+  }
+  for (let i = 0; i < 5 - avgRating; i++) {
+    starsHtml += '<span class="material-symbols-outlined">star</span>';
+  }
+
+  const galleryItems = rumahGadangData.gallery || [];
+  console.log(galleryItems);
+  let carouselIndicators = "";
+  let carouselInner = "";
+
+  galleryItems.forEach((gallery, index) => {
+    carouselIndicators += `
+      <li data-bs-target="#rgCarousel" data-bs-slide-to="${index}" class="${
+      index === 0 ? "active" : ""
+    }"></li>
+    `;
+    carouselInner += `
+      <div class="carousel-item${index === 0 ? " active" : ""}">
+        <img src="/media/photos/${gallery}" class="d-block w-100" alt="${gallery}">
+      </div>
+    `;
+  });
+
+  let carouselHtml = "";
+  if (galleryItems.length > 0) {
+    carouselHtml = `
+      <div id="rgCarousel" class="carousel slide" data-bs-ride="carousel">
+        <ol class="carousel-indicators">${carouselIndicators}</ol>
+        <div class="carousel-inner">${carouselInner}</div>
+        <a class="carousel-control-prev" href="#rgCarousel" role="button" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#rgCarousel" role="button" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </a>
+      </div>
+    `;
+  }
+
+  const videoEmbed = rumahGadangData.video_url
+    ? `<div class="ratio ratio-16x9 my-3">
+       <video src="/media/videos/${rumahGadangData.video_url}" controls></video>
+     </div>`
+    : "";
+
+  console.log(rumahGadangData.video_url);
+  const facilities = rumahGadangData.facilities?.length
+    ? rumahGadangData.facilities
+        .map((f, i) => `<li>${i + 1}. ${f}</li>`)
+        .join("")
+    : "<li>No facilities listed</li>";
+
+  console.log(facilities);
+  $("#modalTitle").html(rumahGadangData.name || "Rumah Gadang Information");
+
+  $("#modalBody").html(`
+    <div class="p-2">
+      <div class="shadow-sm p-3 rounded mb-3">
+        <div class="text-center">${starsHtml}</div>
+        <table class="table table-borderless">
+          <tbody>
+            <tr><td class="fw-bold">Name</td><td>${
+              rumahGadangData.name || "-"
+            }</td></tr>
+            <tr><td class="fw-bold">Address</td><td>${
+              rumahGadangData.address || "-"
+            }</td></tr>
+            <tr><td class="fw-bold">Open</td><td>${
+              rumahGadangData.open || "-"
+            } WIB</td></tr>
+            <tr><td class="fw-bold">Close</td><td>${
+              rumahGadangData.close || "-"
+            } WIB</td></tr>
+            <tr><td class="fw-bold">Contact Person</td><td>${
+              rumahGadangData.contact_person || "-"
+            }</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="shadow-sm p-3 rounded mb-3">
+        <h6 class="fw-bold">Description</h6>
+        <p>${rumahGadangData.description || "No description available."}</p>
+      </div>
+
+      <div class="shadow-sm p-3 rounded mb-3">
+        <h6 class="fw-bold">Facilities</h6>
+        <ul>${facilities}</ul>
+      </div>
+
+      <div class="shadow-sm p-3 rounded mb-3">
+        ${carouselHtml}
+      </div>
+
+      ${videoEmbed}
+    </div>
+  `);
+
+  $("#modalFooter").html(
+    `<button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`
+  );
+  $("#reservationModal").modal("show");
 }
 
 function changeMinDate(value) {
